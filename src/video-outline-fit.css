@@ -1,0 +1,395 @@
+.figma-video {
+  height: auto;
+  min-height: 1720px;
+  padding-bottom: 30px;
+  overflow: hidden;
+  --video-accent: #ff393f;
+  --video-soft: rgba(255, 245, 240, 0.9);
+  --video-advice: rgba(255, 246, 240, 0.88);
+  --video-border: #ffc7b8;
+  --video-shadow: rgba(214, 33, 28, 0.12);
+}
+.figma-video.grade-two,
+.figma-video.grade-three {
+  height: auto;
+  min-height: 2197px;
+}
+.figma-video.grade-two .figma-video-subject,
+.figma-video.grade-three .figma-video-subject {
+  background: #ff2612;
+}
+.figma-video.grade-two {
+  --video-accent: #1e6bff;
+  --video-soft: rgba(240, 247, 255, 0.9);
+  --video-advice: rgba(234, 245, 255, 0.88);
+  --video-border: #b9dcff;
+  --video-shadow: rgba(30, 107, 255, 0.12);
+}
+.figma-video.grade-three {
+  --video-accent: #7b3ff2;
+  --video-soft: rgba(248, 240, 255, 0.9);
+  --video-advice: rgba(242, 233, 255, 0.88);
+  --video-border: #d9c2ff;
+  --video-shadow: rgba(123, 63, 242, 0.12);
+}
+.figma-video header {
+  padding: 112px 16px 0;
+}
+.figma-video header h2 {
+  display: flex;
+  align-items: baseline;
+  white-space: nowrap;
+  font-size: 60px;
+  line-height: 1.15;
+}
+.figma-video header h2 em {
+  font-size: 56px;
+}
+.figma-video header > strong {
+  height: 48px;
+  box-sizing: border-box;
+  margin-top: 12px;
+  padding: 8px 20px;
+  font-size: 24px;
+}
+.figma-video header > p {
+  width: 586px;
+  height: 50px;
+  box-sizing: border-box;
+  margin-top: 23px;
+  padding: 11px 30px;
+  font-size: 20px;
+  white-space: nowrap;
+}
+.figma-video-benefits {
+  height: 182px;
+  box-sizing: border-box;
+  margin-top: 24px;
+  padding: 27px 22px;
+  grid-template-columns: 270px 273px 270px;
+  gap: 10px;
+  box-shadow: 0 8px 28px var(--video-shadow);
+}
+.figma-video-benefits > div {
+  height: 138px;
+  box-sizing: border-box;
+  padding: 13px 10px;
+}
+.figma-video.grade-two .figma-video-benefits {
+  grid-template-columns: 304px 322px 319px;
+  gap: 18px;
+  padding-left: 21px;
+  padding-right: 21px;
+}
+.figma-video-benefits strong {
+  font-size: 22px;
+}
+.figma-video-benefits span {
+  font-size: 14px;
+  line-height: 24px;
+}
+.figma-video .figma-video-outline,
+.figma-video.grade-two .figma-video-outline,
+.figma-video.grade-three .figma-video-outline {
+  height: auto;
+  min-height: 1115px;
+  margin-top: 7px;
+  padding: 24px 20px 22px;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  box-shadow: 0 8px 28px var(--video-shadow);
+}
+.figma-video.grade-two .figma-video-outline {
+  min-height: 1637px;
+}
+.figma-video.grade-three .figma-video-outline {
+  min-height: 1640px;
+}
+.figma-video .outline-top {
+  height: 66px;
+  align-items: flex-start;
+}
+.figma-video .outline-top > b {
+  height: 56px;
+  box-sizing: border-box;
+  padding: 14px 28px;
+  font-size: 20px;
+}
+.figma-video .outline-legends {
+  padding-top: 1px;
+  color: #63636b;
+}
+.figma-video .outline-legends p {
+  margin: 0 0 5px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font-size: 13px;
+  line-height: 22px;
+}
+.figma-video .outline-legends p b {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+.figma-video .outline-legends i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin: 0;
+  border-radius: 50%;
+  background: #ffb04b;
+}
+.figma-video .outline-legends i:nth-of-type(1) {
+  background: #8c8c8c;
+}
+.figma-video .outline-legends i:nth-of-type(2) {
+  background: #ff5263;
+}
+.figma-video .outline-legends span {
+  color: #f5a623;
+  letter-spacing: 2px;
+}
+.figma-video .outline-head,
+.figma-video .outline-rows p {
+  grid-template-columns: 105px minmax(0, 1fr) 155px;
+}
+.figma-video .outline-head {
+  font-size: 17px;
+}
+.figma-video.grade-two .outline-head {
+  background: rgba(191, 213, 255, 0.96);
+  color: #244674;
+}
+.figma-video.grade-three .outline-head {
+  background: rgba(207, 183, 255, 0.96);
+  color: #4f267f;
+}
+.figma-video .outline-rows,
+.figma-video.grade-two .outline-rows,
+.figma-video.grade-three .outline-rows {
+  display: block;
+  flex: 1 0 auto;
+  height: auto;
+  overflow: visible;
+}
+.figma-video .outline-module {
+  border: 0;
+  background: transparent;
+}
+.figma-video .outline-module-title {
+  min-height: 54px;
+  padding: 8px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border: 0;
+  background: #fff1ec;
+}
+.figma-video.grade-two .outline-module-title {
+  background: #edf5ff;
+}
+.figma-video.grade-three .outline-module-title {
+  background: #f4edff;
+}
+.figma-video .outline-module-title strong {
+  font-size: 22px;
+  line-height: 1.4;
+}
+.figma-video .outline-module-title b {
+  flex: 0 0 auto;
+  color: #f0643f;
+  font-size: 22px;
+}
+.figma-video .outline-rows p {
+  min-height: 46px;
+  height: auto;
+  border-bottom: 1px solid #e3e5e8;
+  background: #fff;
+}
+.figma-video .outline-rows p > * {
+  min-width: 0;
+  padding: 6px 14px;
+  border-right-color: #e3e5e8;
+  line-height: 1.5;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.figma-video .outline-rows p > span:first-child {
+  font-size: 15px;
+  font-weight: 500;
+}
+.figma-video .outline-rows p strong {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: flex-start;
+  font-size: 16px;
+  line-height: 1.55;
+}
+.figma-video .outline-rows p strong > span {
+  display: inline;
+  padding: 0;
+  border: 0;
+}
+.figma-video .course-layer-badge {
+  flex: 0 0 auto;
+  padding: 3px 8px;
+  border: 1px solid #ff8b74;
+  border-radius: 10px;
+  background: #fff0eb;
+  color: #f0523b;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.figma-video .outline-rows p > span:last-child {
+  border-right: 0;
+  color: #f5a623;
+  font-size: 18px;
+  letter-spacing: 2px;
+  white-space: nowrap;
+  text-shadow: 0 1px 0 rgba(190, 112, 0, 0.12);
+}
+.figma-video .learning-advice {
+  flex: 0 0 89px;
+  width: 100%;
+  height: 89px;
+  min-height: 89px;
+  padding: 10px;
+  box-sizing: border-box;
+  grid-template-columns: 206px minmax(0, 1fr);
+  margin-top: 16px;
+  border-color: var(--video-border);
+  background: var(--video-advice);
+}
+.figma-video .learning-advice b {
+  height: 67px;
+  padding: 0 17px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-sizing: border-box;
+  border-radius: 4px;
+  color: var(--video-accent);
+  font-size: 20px;
+  line-height: 27px;
+}
+.figma-video .learning-advice b i {
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  background: rgba(255, 148, 107, 0.9);
+  color: #fff;
+  font-size: 22px;
+  font-style: normal;
+  line-height: 1;
+}
+.figma-video.grade-two .learning-advice b i {
+  background: rgba(126, 195, 255, 0.9);
+}
+.figma-video.grade-three .learning-advice b i {
+  background: rgba(183, 138, 255, 0.9);
+}
+.figma-video .learning-advice b strong {
+  font-size: 20px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.figma-video .learning-advice > span {
+  padding: 0 16px;
+  align-self: center;
+  color: #63636b;
+  font-size: 13px;
+  line-height: 21px;
+}
+.figma-video .learning-advice > span p {
+  margin: 0;
+  font: inherit;
+  line-height: 21px;
+  white-space: nowrap;
+}
+.figma-video.grade-two .learning-advice {
+  grid-template-columns: 241px 1fr;
+}
+.figma-video footer {
+  padding-bottom: 2px;
+}
+.figma-video-benefits,
+.figma-video .figma-video-outline,
+.figma-video .outline-rows,
+.figma-video .outline-module {
+  background: #fff;
+}
+.figma-video-benefits > div {
+  background: var(--video-soft);
+}
+.figma-video.is-exporting .figma-video-benefits,
+.figma-video.is-exporting .figma-video-outline,
+.figma-video.is-exporting .outline-rows {
+  background: #fff !important;
+  opacity: 1 !important;
+  mix-blend-mode: normal !important;
+  isolation: isolate;
+  box-shadow: none !important;
+  filter: none !important;
+}
+.figma-video.is-exporting .figma-video-benefits::before,
+.figma-video.is-exporting .figma-video-benefits::after,
+.figma-video.is-exporting .figma-video-outline::before,
+.figma-video.is-exporting .figma-video-outline::after {
+  content: none !important;
+  display: none !important;
+}
+.figma-video.is-exporting .outline-top,
+.figma-video.is-exporting .outline-legends,
+.figma-video.is-exporting .outline-head {
+  opacity: 1 !important;
+  mix-blend-mode: normal !important;
+}
+.figma-video.is-exporting .outline-top,
+.figma-video.is-exporting .outline-legends {
+  background: #fff !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+.figma-video.is-exporting .outline-module,
+.figma-video.is-exporting .outline-rows p {
+  opacity: 1 !important;
+  mix-blend-mode: normal !important;
+}
+.figma-video.is-exporting .outline-rows p {
+  background: #fff !important;
+}
+.figma-video.is-exporting .figma-video-benefits > div {
+  box-shadow: none !important;
+  filter: none !important;
+}
+.figma-video.is-exporting .figma-video-benefits > div {
+  background: var(--video-soft) !important;
+}
+.figma-video footer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  color: var(--video-accent);
+}
+.figma-video footer::before,
+.figma-video footer::after {
+  content: "";
+  width: 182px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.55;
+}

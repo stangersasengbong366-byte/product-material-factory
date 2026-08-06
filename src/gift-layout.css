@@ -1,0 +1,287 @@
+.figma-gift {
+  --gift-shell-start: #ff3d21;
+  --gift-shell-end: #ff6b5c;
+  --gift-card-border: #ffb29e;
+  --gift-top-glow: #ffe0d4;
+  --gift-title-accent: #ff4d1f;
+  --gift-shadow: rgba(191, 33, 20, 0.22);
+  width: 1080px;
+  height: auto;
+  min-height: 1152px;
+  padding: 0;
+  background: linear-gradient(90deg, var(--gift-shell-start), var(--gift-shell-end));
+  overflow: hidden;
+}
+.figma-gift:after {
+  content: "····";
+  display: block;
+  position: absolute;
+  right: 34px;
+  top: -8px;
+  color: #fff;
+  font-size: 27px;
+  letter-spacing: 13px;
+}
+.figma-gift .gift-card {
+  position: absolute;
+  left: 30px;
+  right: 30px;
+  top: 32px;
+  height: auto;
+  min-height: 1069px;
+  padding: 0;
+  box-sizing: border-box;
+  border: 1px solid var(--gift-card-border);
+  border-radius: 42px;
+  background: #fffbf5;
+  box-shadow: 0 18px 40px var(--gift-shadow);
+  overflow: hidden;
+}
+.figma-gift .gift-card:before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 3px;
+  height: 330px;
+  border-radius: 36px;
+  background: linear-gradient(90deg, #fff 0%, var(--gift-top-glow) 100%);
+  z-index: 0;
+}
+.figma-gift .gift-logo {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 444px;
+  height: 75px;
+  background: #fff;
+  object-fit: contain;
+  z-index: 2;
+}
+.figma-gift .gift-badge {
+  position: absolute;
+  right: 24px;
+  top: 63px;
+  width: 210px;
+  height: 210px;
+  z-index: 3;
+}
+.figma-gift .gift-card > header {
+  position: absolute;
+  left: 46px;
+  right: 35px;
+  top: 88px;
+  padding: 0;
+  z-index: 2;
+}
+.figma-gift .gift-card > header h2 {
+  height: 104px;
+  max-width: 850px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  white-space: nowrap;
+  font-size: 66px;
+  font-family: "Inter", "PingFang SC", "Noto Sans SC", sans-serif;
+  font-weight: 800;
+  line-height: 1.1;
+}
+.figma-gift .gift-card > header h2 em {
+  margin: 0;
+  color: #291c1c;
+  font-size: 68px;
+  font-weight: 800;
+  font-style: normal;
+}
+.figma-gift .gift-card > header h2 span {
+  width: 620px;
+  flex: 0 0 620px;
+  color: var(--gift-title-accent);
+  font-size: 66px;
+  font-weight: 800;
+  line-height: 1.1;
+  transform: scaleX(var(--gift-title-scale, 1));
+  transform-origin: left center;
+}
+.figma-gift .gift-card > header > div {
+  height: 78px;
+  min-height: 78px;
+  margin-top: 36px;
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+.figma-gift .gift-card > header > div > b {
+  margin-left: -11px;
+}
+.figma-gift .gift-card > header b {
+  width: 175px;
+  min-width: 175px;
+  height: 76px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background: linear-gradient(90deg, #ff404f, #ff7847);
+  color: #fff;
+  font-size: 46px;
+  box-shadow: 0 10px 20px rgba(255, 66, 46, 0.25);
+}
+.figma-gift .gift-card > header span {
+  max-width: 520px;
+  color: #291c1c;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.figma-gift .gift-card > header span i {
+  font: inherit;
+  font-style: normal;
+}
+.figma-gift .gift-editable {
+  cursor: text;
+  outline: 2px dashed rgba(123, 63, 242, 0.55);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+.figma-gift .gift-editable:focus {
+  outline-style: solid;
+  background: rgba(255, 255, 255, 0.72);
+}
+.figma-gift.is-exporting .gift-editable {
+  outline: 0 !important;
+  background: transparent !important;
+}
+.gift-outline-list {
+  position: relative;
+  margin: 0 46px 0 34px;
+  padding-top: 357px;
+  display: grid;
+  gap: 24px;
+  background: transparent;
+}
+.gift-outline {
+  overflow: hidden;
+  border: 0;
+  border-radius: 16px;
+  background: #fff;
+}
+.gift-outline > header {
+  height: 74px;
+  padding: 10px 18px;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 18px;
+  background: #fff0e8;
+}
+.gift-outline > header > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.gift-outline > header b {
+  padding: 4px 9px;
+  border-radius: 7px;
+  background: #ff4d2a;
+  color: #fff;
+  font-size: 15px;
+}
+.gift-outline > header strong {
+  font-size: 22px;
+}
+.gift-outline > header > span {
+  align-self: center;
+  color: #ff4d2a;
+  font-size: 18px;
+  font-weight: 900;
+}
+.gift-outline > header small {
+  grid-column: 1/-1;
+  color: #765d54;
+  font-size: 13px;
+}
+.gift-outline table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  color: #000;
+  font-family: "PingFang SC", "Noto Sans SC", sans-serif;
+  font-size: 32px;
+}
+.gift-outline th {
+  height: 90px;
+  background: #fff4cc;
+  color: #972b2c;
+  font-size: 36px;
+  font-weight: 600;
+}
+.gift-outline th:first-child {
+  width: 274px;
+}
+.gift-outline th,
+.gift-outline td {
+  padding: 10px 24px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+.gift-outline td {
+  height: 85px;
+  box-sizing: border-box;
+  background: #fff;
+  font-weight: 400;
+  line-height: 1.3;
+}
+.figma-gift.grade-two {
+  --gift-shell-start: #2197ff;
+  --gift-shell-end: #5c9aff;
+  --gift-card-border: #0323f8;
+  --gift-top-glow: #d4ebff;
+  --gift-title-accent: #1f096e;
+  --gift-shadow: rgba(16, 49, 179, 0.22);
+}
+.figma-gift.grade-two .gift-card {
+  border-color: var(--gift-card-border);
+}
+.figma-gift.grade-three {
+  --gift-shell-start: #c29eff;
+  --gift-shell-end: #f0deff;
+  --gift-card-border: #5b2278;
+  --gift-top-glow: #d4d7ff;
+  --gift-title-accent: #1f096e;
+  --gift-shadow: rgba(75, 35, 118, 0.22);
+}
+.figma-gift.grade-three .gift-card {
+  border-color: var(--gift-card-border);
+}
+.figma-gift.is-exporting .gift-card {
+  background: #fff !important;
+  box-shadow: none !important;
+  filter: none !important;
+  opacity: 1 !important;
+  mix-blend-mode: normal !important;
+  isolation: isolate;
+}
+.figma-gift.is-exporting .gift-outline-list {
+  background: #fff !important;
+  opacity: 1 !important;
+  mix-blend-mode: normal !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+.figma-gift.is-exporting .gift-outline,
+.figma-gift.is-exporting .gift-outline table,
+.figma-gift.is-exporting .gift-outline thead,
+.figma-gift.is-exporting .gift-outline tbody,
+.figma-gift.is-exporting .gift-outline tr,
+.figma-gift.is-exporting .gift-outline td {
+  background: #fff !important;
+  opacity: 1 !important;
+  mix-blend-mode: normal !important;
+}
+.figma-gift.is-exporting .gift-outline th {
+  background: #fff4cc !important;
+  opacity: 1 !important;
+  mix-blend-mode: normal !important;
+}

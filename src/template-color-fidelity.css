@@ -1,0 +1,182 @@
+/* Figma UI参考页的最终色彩基准。放在各模板样式之后，避免通用年级主题覆盖。 */
+
+/* 学法直播：画布与正文侧边渐变 */
+.figma-live {
+  isolation: isolate;
+}
+.figma-live::before {
+  z-index: 0;
+  pointer-events: none;
+}
+.figma-live .figma-live-logo,
+.figma-live .figma-live-title,
+.figma-live .figma-live-subject,
+.figma-live .figma-live-content {
+  z-index: 1;
+}
+.figma-live .figma-live-title {
+  z-index: 2;
+}
+.figma-live .figma-live-subject {
+  z-index: 3;
+}
+.figma-live.grade-one {
+  background: linear-gradient(
+    180deg,
+    #fe865f 0%,
+    #ffeec3 8%,
+    #ff7549 17%,
+    #fedaa8 100%
+  );
+}
+.figma-live.grade-two {
+  background: linear-gradient(
+    180deg,
+    #1793ff 0%,
+    #c3e5ff 9.6%,
+    #49a4ff 18%,
+    #a8e0fe 100%
+  );
+}
+.figma-live.grade-three {
+  background: linear-gradient(
+    180deg,
+    #4d17ff 0%,
+    #c3cfff 9.6%,
+    #cbcaff 18%,
+    #aca8fe 100%
+  );
+}
+
+/* 三个年级的弧线与课程表区域均沿用 Figma 暖黄色体系 */
+.figma-live .figma-live-content > h3,
+.figma-live .figma-live-stage-list .figma-live-period,
+.figma-live.grade-two .figma-live-stage-list .figma-live-period,
+.figma-live.grade-three .figma-live-stage-list .figma-live-period {
+  background: #ffd592;
+  color: #000;
+}
+.figma-live .figma-live-head,
+.figma-live.grade-two .figma-live-head,
+.figma-live.grade-three .figma-live-head {
+  background: #ffeec3;
+  color: #6a3911;
+}
+
+/* Figma 中三年级年级卡均为金色，科目标签均为红色。 */
+.figma-live.grade-one .figma-live-title > span,
+.figma-live.grade-two .figma-live-title > span,
+.figma-live.grade-three .figma-live-title > span {
+  border: 2px solid rgba(255, 237, 201, 0);
+  background:
+    radial-gradient(ellipse 78% 145% at 54% 70%, #ffe9a7 0%, rgba(255, 220, 146, 0) 100%),
+    #ffd388;
+  color: #6d2728;
+  box-shadow: 0 8px 16px rgba(105, 62, 32, 0.4);
+}
+.figma-live.grade-one .figma-live-subject,
+.figma-live.grade-two .figma-live-subject,
+.figma-live.grade-three .figma-live-subject {
+  background: linear-gradient(90deg, #ff431c, #e91613);
+}
+.figma-live.grade-two .figma-live-title h2 {
+  --live-title-outline: #1b2298;
+  text-shadow: 0 4px 0 #1b2298;
+}
+.figma-live.grade-three .figma-live-title h2 {
+  --live-title-outline: #5231d4;
+  text-shadow: 0 4px 0 #5231d4;
+}
+
+/* html2canvas 对径向透明高光会产生分块，导出时使用等效稳定金色。 */
+.figma-live.is-exporting.grade-one .figma-live-title > span,
+.figma-live.is-exporting.grade-two .figma-live-title > span,
+.figma-live.is-exporting.grade-three .figma-live-title > span {
+  border: 0 !important;
+  border-color: transparent !important;
+  background: #ffd388 !important;
+  background-image: none !important;
+  color: #6d2728 !important;
+  opacity: 1 !important;
+  mix-blend-mode: normal !important;
+  filter: none !important;
+  /* html2canvas 会把带透明边框的投影切成矩形色块；导出时关闭投影，
+     保留圆角和 Figma 的金色实体底色，避免年级标签出现分段。 */
+  box-shadow: none !important;
+}
+
+/* 知识视频：三套画布、主题色与内容卡片 */
+.figma-video.grade-one {
+  background: linear-gradient(90deg, #fff6eb 0%, #ffb8a1 100%);
+}
+.figma-video.grade-two {
+  background: linear-gradient(90deg, #eef7ff 0%, #a7d8ff 100%);
+}
+.figma-video.grade-three {
+  background: linear-gradient(90deg, #f7f0ff 0%, #d4b4ff 100%);
+}
+.figma-video.grade-one .figma-video-benefits > div { background: rgba(255, 245, 240, 0.9); }
+.figma-video.grade-two .figma-video-benefits > div { background: rgba(240, 247, 255, 0.9); }
+.figma-video.grade-three .figma-video-benefits > div { background: rgba(248, 240, 255, 0.9); }
+.figma-video.grade-two .outline-head { background: rgba(191, 213, 255, 0.96); color: #244674; }
+.figma-video.grade-three .outline-head { background: rgba(207, 183, 255, 0.96); color: #4f267f; }
+.figma-video.grade-one .figma-video-subject,
+.figma-video.grade-two .figma-video-subject,
+.figma-video.grade-three .figma-video-subject {
+  background: #ff2612;
+}
+
+/* 赠课：Figma 三年级原始主题色 */
+.figma-gift.grade-one {
+  --gift-shell-start: #ff3d21;
+  --gift-shell-end: #ff6b5c;
+  --gift-card-border: #ffb29e;
+  --gift-top-glow: #ffe0d4;
+  --gift-title-accent: #ff4d1f;
+}
+.figma-gift.grade-two {
+  --gift-shell-start: #2197ff;
+  --gift-shell-end: #5c9aff;
+  --gift-card-border: #0323f8;
+  --gift-top-glow: #d4ebff;
+  --gift-title-accent: #1f096e;
+}
+.figma-gift.grade-three {
+  --gift-shell-start: #c29eff;
+  --gift-shell-end: #f0deff;
+  --gift-card-border: #5b2278;
+  --gift-top-glow: #d4d7ff;
+  --gift-title-accent: #1f096e;
+}
+.figma-gift.grade-one,
+.figma-gift.grade-two,
+.figma-gift.grade-three {
+  background: linear-gradient(90deg, var(--gift-shell-start), var(--gift-shell-end));
+}
+.figma-gift.grade-one .gift-card,
+.figma-gift.grade-two .gift-card,
+.figma-gift.grade-three .gift-card {
+  border-color: var(--gift-card-border);
+  background: #fffbf5;
+}
+.figma-gift.grade-one .gift-card::before,
+.figma-gift.grade-two .gift-card::before,
+.figma-gift.grade-three .gift-card::before {
+  background: linear-gradient(90deg, #fff 0%, var(--gift-top-glow) 100%);
+}
+.figma-gift.grade-one .gift-card > header h2 span,
+.figma-gift.grade-two .gift-card > header h2 span,
+.figma-gift.grade-three .gift-card > header h2 span {
+  color: var(--gift-title-accent);
+}
+.figma-gift.grade-one .gift-card > header b,
+.figma-gift.grade-two .gift-card > header b,
+.figma-gift.grade-three .gift-card > header b {
+  background: linear-gradient(90deg, #ff404f, #ff7847);
+}
+
+/* 保留已验证的导出隔离，避免 html2canvas 将外层渐变混入白色内容区。 */
+.figma-gift.is-exporting .gift-card,
+.figma-gift.is-exporting .gift-outline-list {
+  background: #fff !important;
+}

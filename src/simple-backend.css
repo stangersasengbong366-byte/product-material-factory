@@ -1,0 +1,242 @@
+.product-config-content .config-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+.selected-product-info {
+  grid-template-columns: 1.4fr 1fr 1fr;
+}
+.material-type-step button {
+  min-width: 160px;
+}
+.material-type-step em {
+  margin-left: 12px;
+}
+.product-config-content .workbook-section-heading {
+  padding: 10px 4px 0;
+}
+.product-config-content .workbook-section-heading strong {
+  margin: 0;
+  font-size: 16px;
+}
+.stage-mapping-card .config-heading {
+  margin-bottom: 14px;
+}
+.stage-mapping-card .quarter-options {
+  margin-top: 0;
+}
+.stage-mapping-card .quarter-options button {
+  height: 46px;
+}
+.live-association .live-controls {
+  display: block;
+}
+.live-association .live-controls > label {
+  display: block;
+  max-width: 320px;
+}
+.live-association .annual-outline-bar {
+  justify-content: flex-start;
+  padding: 10px 0;
+  border: 0;
+  background: transparent;
+}
+.live-association .annual-outline-bar .annual-stage-tabs {
+  width: 100%;
+}
+.live-association .annual-stage-tabs button {
+  flex: 1;
+}
+.video-association .video-outline-browser {
+  margin-top: 0;
+}
+.video-association .video-outline-browser-head span {
+  display: none;
+}
+.simple-subject-control {
+  max-width: 320px;
+  margin-bottom: 14px;
+}
+.simple-subject-control label {
+  color: #7f8791;
+  font-size: 10px;
+}
+.simple-subject-control select {
+  width: 100%;
+  height: 38px;
+  margin-top: 7px;
+  padding: 0 10px;
+  border: 1px solid #e0e3e7;
+  border-radius: 8px;
+  background: #fff;
+}
+.gift-association > .config-heading > em {
+  color: #9d5ccb;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+}
+.gift-mapping-table {
+  max-height: 420px;
+  overflow: auto;
+  border: 1px solid #e4e6ea;
+  border-radius: 10px;
+}
+.gift-mapping-table > div {
+  min-height: 40px;
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  align-items: center;
+  border-bottom: 1px solid #edf0f2;
+}
+.gift-mapping-table > div:first-child {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #f7f8fa;
+  color: #7d8590;
+  font-size: 10px;
+}
+.gift-mapping-table span,
+.gift-mapping-table strong {
+  height: 100%;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+}
+.gift-mapping-table span {
+  justify-content: center;
+}
+.gift-mapping-table strong {
+  border-left: 1px solid #edf0f2;
+  font-size: 11px;
+  font-weight: 500;
+}
+@media (max-width: 900px) {
+  .product-config-content .config-grid {
+    grid-template-columns: 1fr;
+  }
+  .stage-mapping-card .quarter-options {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.workbook-section-heading > div {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.workbook-section-heading span {
+  color: #8b919b;
+  font-size: 12px;
+  font-weight: 400;
+}
+.annual-workbook-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.product-gift-heading {
+  margin-top: 22px;
+}
+.product-gift-grid {
+  grid-template-columns: minmax(320px, 1fr);
+}
+@media (max-width: 900px) {
+  .annual-workbook-grid {
+    grid-template-columns: 1fr;
+  }
+  .workbook-section-heading > div {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+}
+.sidebar-navigation {
+  display: grid;
+  gap: 10px;
+}
+.sidebar-task-group {
+  padding: 10px 8px 8px;
+  border: 1px solid #303541;
+  border-radius: 12px;
+  background: #1d2129;
+}
+.sidebar-task-heading {
+  padding: 1px 7px 8px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #747c89;
+  font-size: 11px;
+  font-weight: 700;
+}
+.studio-sidebar .sidebar-task-group .task-subnav {
+  width: 100%;
+  min-height: 38px;
+  padding: 9px 8px 9px 12px;
+  display: grid;
+  grid-template-columns: 18px 1fr auto;
+  gap: 8px;
+  color: #9da4b0;
+  text-align: left;
+}
+.studio-sidebar .sidebar-task-group .task-subnav.active {
+  color: #fff;
+  background: #343944;
+  box-shadow: inset 3px 0 #ef5732;
+}
+.task-subnav em {
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: #292e37;
+  color: #858d99;
+  font-size: 9px;
+  font-style: normal;
+}
+.task-subnav.active em {
+  background: #4a3030;
+  color: #ffb29c;
+}
+.production-setup {
+  grid-template-columns: minmax(260px, 0.8fr) minmax(520px, 2fr);
+}
+.selected-product-info {
+  grid-template-columns: 1.25fr 1fr 1.2fr;
+}
+.production-type-summary {
+  grid-column: 1 / -1;
+  padding: 13px 14px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 0.3fr)) 1fr;
+  gap: 8px;
+  align-items: center;
+  border-top: 1px solid #eceef1;
+  border-radius: 0 0 10px 10px;
+  background: #fafbfc;
+}
+.production-type-summary > div {
+  padding: 8px 11px;
+  border-right: 1px solid #e7e9ed;
+}
+.production-type-summary small,
+.production-type-summary strong {
+  display: block;
+}
+.production-type-summary small {
+  color: #969da7;
+  font-size: 9px;
+}
+.production-type-summary strong {
+  margin-top: 4px;
+  font-size: 13px;
+}
+.production-type-summary p {
+  margin: 0;
+  color: #7f8792;
+  font-size: 10px;
+  line-height: 1.55;
+}
+@media (max-width: 1100px) {
+  .production-type-summary {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .production-type-summary p {
+    grid-column: 1 / -1;
+  }
+}

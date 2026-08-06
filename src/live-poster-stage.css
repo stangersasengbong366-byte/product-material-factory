@@ -1,0 +1,172 @@
+.figma-live-subject {
+  position: absolute;
+  right: 34px;
+  top: 27px;
+  z-index: 3;
+  min-width: 188px;
+  padding: 12px 30px;
+  border-radius: 18px;
+  background: linear-gradient(90deg, #ff431c, #e91613);
+  color: #fff;
+  font-size: 38px;
+  font-weight: 900;
+  letter-spacing: 8px;
+  text-align: center;
+  box-shadow: none;
+}
+.figma-live::before {
+  top: 166px;
+  left: -33px;
+  right: auto;
+  width: 1666px;
+  height: 107px;
+  border: 0;
+  border-radius: 0;
+  background: url("/figma-assets/live-header-curve.svg") center / 100% 100% no-repeat;
+  filter: none;
+}
+.figma-live .figma-live-title > span {
+  width: 195.632px;
+  min-width: 195.632px;
+  height: 64px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  font-family: "Alibaba PuHuiTi 3.0", "Alibaba PuHuiTi 3", "PingFang SC", sans-serif;
+  font-size: 36px;
+  line-height: 56px;
+  letter-spacing: 0;
+}
+.figma-live.grade-one .figma-live-title > span {
+  border: 2px solid rgba(255, 237, 201, 0);
+  border-radius: 20px;
+  background:
+    radial-gradient(ellipse 78% 145% at 54% 70%, #ffe9a7 0%, rgba(255, 220, 146, 0) 100%),
+    #ffd388;
+  color: #6d2728;
+  box-shadow: 0 8px 16px rgba(105, 62, 32, 0.4);
+}
+.figma-live .figma-live-title {
+  top: 115px;
+  left: 331.37px;
+  right: auto;
+  width: 1080px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 13px;
+  padding: 0;
+  box-sizing: border-box;
+}
+.figma-live .figma-live-title h2 {
+  --live-title-outline: #981b1b;
+  font-family: "CKTKingKong", "Noto Sans SC", "Alibaba PuHuiTi 3.0", "PingFang SC", sans-serif;
+  font-size: 77px;
+  font-weight: 800;
+  line-height: normal;
+  letter-spacing: 0;
+  white-space: nowrap;
+  margin-top: 10px;
+  -webkit-text-stroke: 0;
+  text-shadow: 0 4px 0 #981b1b;
+}
+.figma-live.grade-two .figma-live-title,
+.figma-live.grade-three .figma-live-title {
+  top: 108px;
+  left: 0;
+  right: 0;
+  width: auto;
+  justify-content: center;
+  gap: 28px;
+  padding: 0 210px;
+}
+.figma-live.grade-two .figma-live-title h2 {
+  --live-title-outline: #1b2298;
+  font-family: "Noto Sans SC", "Alibaba PuHuiTi 3.0", "PingFang SC", sans-serif;
+  font-size: 68px;
+  font-weight: 900;
+  line-height: 96px;
+  text-shadow: 0 4px 0 #1b2298;
+}
+.figma-live.grade-three .figma-live-title h2 {
+  --live-title-outline: #4b1c7b;
+  font-family: "Noto Sans SC", "Alibaba PuHuiTi 3.0", "PingFang SC", sans-serif;
+  font-size: 58px;
+  font-weight: 900;
+  line-height: 96px;
+  text-shadow: 0 4px 0 #1b2298;
+}
+.figma-live .figma-live-content {
+  left: 26px;
+  right: 33px;
+  border-radius: 10px 10px 20px 20px;
+}
+.figma-live-stage-list {
+  height: auto;
+  display: block;
+}
+.figma-live-content > h3 {
+  border: 0.516px solid #fff;
+  font-family: "Arial Black", "Noto Sans SC", "PingFang SC", sans-serif;
+  font-size: 33.013px;
+  line-height: 52.955px;
+  font-weight: 800;
+}
+.figma-live-stage {
+  display: block;
+}
+.figma-live-stage-list .figma-live-period {
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  background: #ffc448;
+  color: #5f320d;
+}
+.figma-live-period strong {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+.figma-live-period span {
+  padding-left: 28px;
+  border-left: 2px solid rgba(112, 61, 10, 0.24);
+  font-size: 32px;
+  font-weight: 800;
+}
+.figma-live-period b {
+  padding-left: 28px;
+  border-left: 2px solid rgba(112, 61, 10, 0.24);
+  font-size: 32px;
+  font-weight: 800;
+}
+.figma-live-stage .figma-live-head {
+  height: 83px;
+  font-size: 32px;
+  font-weight: 800;
+}
+.figma-live-stage .figma-live-rows {
+  height: auto;
+}
+.figma-live .figma-live-rows p,
+.figma-live.is-multi-stage .figma-live-rows p,
+.figma-live.is-single-stage .figma-live-rows p {
+  height: 78px;
+  min-height: 78px;
+  margin: 0;
+  font-size: 27px;
+  line-height: 1.35;
+}
+.figma-live .figma-live-rows p > * {
+  padding: 0 28px;
+  font-size: 27px;
+}
+.figma-live .figma-live-rows p span {
+  font-weight: 400;
+}
+.figma-live .figma-live-rows p strong {
+  font-size: 27px;
+  font-weight: 600;
+}
