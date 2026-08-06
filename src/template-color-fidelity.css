@@ -17,6 +17,10 @@
 .figma-live .figma-live-title {
   z-index: 2;
 }
+.figma-live .figma-live-title h2 {
+  -webkit-text-stroke: 3px var(--live-title-outline);
+  paint-order: stroke fill;
+}
 .figma-live .figma-live-subject {
   z-index: 3;
 }
