@@ -55,6 +55,9 @@ const taskNavItems = [
   { type: "价格", icon: DollarSign },
 ];
 
+const assetUrl = (path) =>
+  `${import.meta.env.BASE_URL}${String(path).replace(/^\/+/, "")}`;
+
 function annualLibraryFromProduct(product = {}) {
   return normalizeAnnualLibrary({
     uploadNames: {
@@ -1549,7 +1552,7 @@ const PricePoster = React.forwardRef(function PricePoster({ product, quoteMode =
   return (
     <article ref={ref} className={`figma-poster price-poster ${theme}`}>
       <div className="brand-plate">
-        <img src="/price-assets/brand-logo.png" alt="网易有道领世" />
+        <img src={assetUrl("price-assets/brand-logo.png")} alt="网易有道领世" />
       </div>
       <div className="hero-card autumn-card-icon" aria-hidden="true">
         <div className="glass-card back-card" />
@@ -1579,17 +1582,17 @@ const PricePoster = React.forwardRef(function PricePoster({ product, quoteMode =
         <div className="course-band">每科课程包含</div>
         <div className="course-modules" data-count="3" style={{ "--module-count": 3 }}>
           <article className="module">
-            <div className="module-visual"><img src="/price-assets/module-knowledge.png" alt="" /></div>
+            <div className="module-visual"><img src={assetUrl("price-assets/module-knowledge.png")} alt="" /></div>
             <div className="module-label"><span className="module-chip">知识视频</span><span className="module-copy">查缺补漏</span></div>
             <div className="module-hours">{isWenZong ? (price.wenZongKnowledgeHours || `${effectiveHours.knowledge}节/科`) : `${effectiveHours.knowledge}节/科`}{(isWenZong ? price.wenZongKnowledgeGift : price.knowledgeGift) ? <span className="gift-text">{isWenZong ? price.wenZongKnowledgeGift : price.knowledgeGift}</span> : null}</div>
           </article>
           <article className="module">
-            <div className="module-visual"><img src="/price-assets/module-live.png" alt="" /></div>
+            <div className="module-visual"><img src={assetUrl("price-assets/module-live.png")} alt="" /></div>
             <div className="module-label"><span className="module-chip">学法直播</span><span className="module-copy">大招提分</span></div>
             <div className="module-hours">{isWenZong ? (price.wenZongLiveHours || `${effectiveHours.live}节/科`) : `${effectiveHours.live}节/科`}{(isWenZong ? price.wenZongLiveGift : price.liveGift) ? <span className="gift-text">{isWenZong ? price.wenZongLiveGift : price.liveGift}</span> : null}</div>
           </article>
           <article className="module">
-            <div className="module-visual"><img src="/price-assets/module-service.png" alt="" /></div>
+            <div className="module-visual"><img src={assetUrl("price-assets/module-service.png")} alt="" /></div>
             <div className="module-label"><span className="module-chip">辅导服务</span><span className="module-copy">伴学提升</span></div>
             <div className="module-hours">{isWenZong ? (price.wenZongServiceText || price.serviceText || "专属学习服务") : (price.serviceText || "专属学习服务")}{(isWenZong ? price.wenZongServiceGift : price.serviceGift) ? <span className="gift-text">{isWenZong ? price.wenZongServiceGift : price.serviceGift}</span> : null}<small className="service-period">{price.servicePeriod}</small></div>
           </article>
@@ -1617,9 +1620,12 @@ const LivePoster = React.forwardRef(function LivePoster(
     <article
       ref={ref}
       className={`figma-poster figma-live ${gradeTheme} ${multi ? "is-multi-stage" : "is-single-stage"}`}
-      style={{ height: `${posterHeight}px` }}
+      style={{
+        height: `${posterHeight}px`,
+        "--live-header-curve": `url("${assetUrl("figma-assets/live-header-curve.svg")}")`,
+      }}
     >
-      <img className="figma-live-logo" src="/figma-assets/live-logo.png" />
+      <img className="figma-live-logo" src={assetUrl("figma-assets/live-logo.png")} />
       <div className="figma-live-subject">{subject}</div>
       <div className="figma-live-title">
         <span>{product.grade}年级</span>
@@ -1641,7 +1647,7 @@ const LivePoster = React.forwardRef(function LivePoster(
               ["live-feature-notes.png", "学法讲义"],
             ].map(([src, label]) => (
               <div key={label}>
-                <img src={`/figma-assets/${src}`} />
+                <img src={assetUrl(`figma-assets/${src}`)} />
                 <span>{label}</span>
               </div>
             ))}
@@ -1710,16 +1716,16 @@ const VideoPoster = React.forwardRef(function VideoPoster(
         className="figma-video-logo"
         src={
           gradeAsset === "g1"
-            ? "/figma-assets/video-logo.png"
-            : `/figma-assets/video-logo-${gradeAsset}.png`
+            ? assetUrl("figma-assets/video-logo.png")
+            : assetUrl(`figma-assets/video-logo-${gradeAsset}.png`)
         }
       />
       <img
         className="figma-video-bg"
         src={
           gradeAsset === "g1"
-            ? "/figma-assets/video-bg.png"
-            : `/figma-assets/video-bg-${gradeAsset}.png`
+            ? assetUrl("figma-assets/video-bg.png")
+            : assetUrl(`figma-assets/video-bg-${gradeAsset}.png`)
         }
       />
       <div className="figma-video-subject">{subject}</div>
@@ -1880,16 +1886,16 @@ const GiftPoster = React.forwardRef(function GiftPoster(
           className="gift-logo"
           src={
             gradeAsset === "g1"
-              ? "/figma-assets/gift-logo.png"
-              : `/figma-assets/gift-logo-${gradeAsset}.png`
+              ? assetUrl("figma-assets/gift-logo.png")
+              : assetUrl(`figma-assets/gift-logo-${gradeAsset}.png`)
           }
         />
         <img
           className="gift-badge"
           src={
             gradeAsset === "g1"
-              ? "/figma-assets/gift-badge.png"
-              : `/figma-assets/gift-badge-${gradeAsset}.png`
+              ? assetUrl("figma-assets/gift-badge.png")
+              : assetUrl(`figma-assets/gift-badge-${gradeAsset}.png`)
           }
         />
         <header>

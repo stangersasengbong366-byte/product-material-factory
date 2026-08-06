@@ -5,9 +5,9 @@ const STORAGE_KEY = "youdao-course-material-studio-product-v1";
 export function loadProduct() {
   try {
     const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
-    return stored ? normalizeProduct(stored) : demoProduct;
+    return normalizeProduct(stored || demoProduct);
   } catch {
-    return demoProduct;
+    return normalizeProduct(demoProduct);
   }
 }
 
