@@ -18,12 +18,17 @@
 .price-poster.theme-blue .tag-ribbon{color:#0568dc}.price-poster.theme-peach .tag-ribbon{color:#e45100}.price-poster.theme-purple .tag-ribbon{background:linear-gradient(180deg,#fff2a9,#ffdc55);color:#140f63}
 .price-poster .poster-title{position:relative;z-index:2;padding:108px 0 26px 48px}
 .price-poster .poster-title h2{position:relative;z-index:1;max-width:700px;margin:0;color:#3a0606;font-size:62px;line-height:1.18;font-weight:900;text-shadow:none}
+.price-poster .poster-grade-name{color:var(--red)}
+.price-poster .poster-product-name{color:inherit}
 .price-poster .poster-title h2::first-letter{color:var(--red)}
 .price-poster .poster-subtitle{position:relative;z-index:1;margin:15px 0 0;color:#6b251d;font-size:21px;font-weight:900}
 .price-poster .poster-title::after{content:"";position:relative;z-index:1;display:block;width:210px;height:8px;margin-top:18px;border-radius:999px;background:linear-gradient(90deg,#f23434,#ffbd62)}
 .price-poster.theme-blue .poster-title h2{color:#17275c}.price-poster.theme-blue .poster-title h2::first-letter{color:#0874ff}.price-poster.theme-blue .poster-subtitle{color:#1457aa}.price-poster.theme-blue .poster-title::after{background:linear-gradient(90deg,#0874ff,#72c9ff)}
+.price-poster.theme-blue .poster-grade-name{color:#0874ff}
 .price-poster.theme-peach .poster-title h2{color:#3e160d}.price-poster.theme-peach .poster-title h2::first-letter{color:#f15d1b}.price-poster.theme-peach .poster-subtitle{color:#9a3d1d}.price-poster.theme-peach .poster-title::after{background:linear-gradient(90deg,#f15d1b,#ffc06c)}
+.price-poster.theme-peach .poster-grade-name{color:#f15d1b}
 .price-poster.theme-purple .poster-title h2{color:#11104f}.price-poster.theme-purple .poster-title h2::first-letter{color:#5744ff}.price-poster.theme-purple .poster-subtitle{display:inline-block;padding:8px 14px;border-radius:8px;background:#f0eeff;color:#1b1764}.price-poster.theme-purple .poster-title::after{width:250px;background:linear-gradient(90deg,#4f3cff,#8da2ff)}
+.price-poster.theme-purple .poster-grade-name{color:#5744ff}
 .price-poster .table-card{position:relative;z-index:2;width:calc(100% - 72px);margin:0 auto;overflow:hidden;border:2px solid #f2a45e;border-radius:20px;background:#fff;box-shadow:none}
 .price-poster.theme-blue .table-card{border-color:#7ca3ff}.price-poster.theme-peach .table-card{border-color:#efad70}.price-poster.theme-purple .table-card{border-color:#8a78ff}
 .price-poster .price-table{display:grid;grid-template-columns:1fr;padding:22px 20px 0;background:#fff}

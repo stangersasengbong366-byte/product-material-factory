@@ -1544,11 +1544,12 @@ const PricePoster = React.forwardRef(function PricePoster({ product, quoteMode =
   const effectiveHours = effectivePriceHours(product);
   const theme = product.grade === "高二" ? "theme-blue" : product.grade === "高三" ? "theme-purple" : "theme-peach";
   const cardLabel = product.stage || product.name.replace(product.grade, "") || "课程卡";
-  const displayProductName = product.name.startsWith(`${product.grade}年级`)
-    ? product.name
+  const gradeDisplayName = `${product.grade}年级`;
+  const productDisplayName = product.name.startsWith(gradeDisplayName)
+    ? product.name.slice(gradeDisplayName.length)
     : product.name.startsWith(product.grade)
-      ? `${product.grade}年级${product.name.slice(product.grade.length)}`
-      : `${product.grade}年级${product.name}`;
+      ? product.name.slice(product.grade.length)
+      : product.name;
   const rows = [1, 2, 3, 4, 5, 6].map((count) => {
     const unit = count === 1 ? price.tier1 : count === 2 ? price.tier2 : price.tier3;
     const official = Number(price.officialUnitPrice || 0) * count;
@@ -1566,7 +1567,7 @@ const PricePoster = React.forwardRef(function PricePoster({ product, quoteMode =
       </div>
       <div className="tag-ribbon">{isWenZong ? "文综" : (price.tag || "非文综")}</div>
       <header className="poster-title">
-        <h2>{displayProductName}<br />价格体系</h2>
+        <h2><span className="poster-grade-name">{gradeDisplayName}</span><span className="poster-product-name">{productDisplayName}</span><br />价格体系</h2>
         <p className="poster-subtitle">{isWenZong ? "政治・历史・地理" : (price.subjectScope || "适用科目以产品配置为准")}</p>
       </header>
       <section className="table-card">
