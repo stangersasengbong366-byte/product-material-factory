@@ -176,7 +176,7 @@ function parseVideo(rows) {
     }
     let currentModule = "";
     const stageRows = {};
-    sheetRows.forEach((row) => {
+    sheetRows.forEach((row, sourceIndex) => {
       currentModule = pickExact(row, "模块") || currentModule;
       const title =
         pickExact(row, "视频大纲") ||
@@ -192,6 +192,10 @@ function parseVideo(rows) {
         pick(row, ["班型", "层次", "分层", "视频班型"]);
       const bucket = resolveVideoBucket(layerValue, title);
       const item = {
+        sourceOrder: sourceIndex,
+        no:
+          numberValue(pick(row, ["序号", "编号", "课次", "节次"])) ||
+          sourceIndex + 1,
         grade,
         subject,
         quarter,
@@ -236,14 +240,9 @@ function parseVideo(rows) {
     )[0];
     const buckets = { common: [], target: [], elite: [], layered: [] };
     selected.items.forEach((item) => buckets[item.bucket].push(item));
-    Object.values(buckets).forEach((items) =>
-      items.forEach((item, index) => {
-        item.no = index + 1;
-      }),
-    );
     ((library[selected.grade] ||= {})[selected.subject] ||= {})[
       selected.quarter
-    ] = buckets;
+    ] = { ...buckets, ordered: selected.items };
     selectedSources.push({
       grade: selected.grade,
       subject: selected.subject,
