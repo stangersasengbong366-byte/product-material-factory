@@ -469,23 +469,14 @@ function TaskWorkspace({
   useEffect(() => setGiftEditing(false), [activeTaskId, product.id]);
   const updateGiftCopy = (patch) => {
     if (activeTask?.type !== "赠课") return;
-    const subject = activeTask.subject;
-    const current = product.giftCopyOverrides?.[subject] || {};
     const templatePatch = Object.fromEntries(
       Object.entries(patch).filter(([key]) => ["name", "intro"].includes(key)),
-    );
-    const subjectPatch = Object.fromEntries(
-      Object.entries(patch).filter(([key]) => key === "lessons"),
     );
     onUpdateProduct({
       ...product,
       giftTemplateOverride: {
         ...(product.giftTemplateOverride || {}),
         ...templatePatch,
-      },
-      giftCopyOverrides: {
-        ...(product.giftCopyOverrides || {}),
-        [subject]: { ...current, ...subjectPatch },
       },
     });
   };
@@ -586,14 +577,14 @@ function TaskWorkspace({
           <div className="preview-toolbar">
             <div>
               <Eye size={17} />
-              <span>素材预览</span>
-              <em>{product.name}</em>
+              <span>{activeTask?.type === "赠课" ? "赠课母版预览" : "素材预览"}</span>
+              <em>{activeTask?.type === "赠课" ? "自动同步全部学科" : product.name}</em>
             </div>
             <div className="preview-actions">
             {activeTask?.type === "赠课" ? (
               <>
                 <button className={giftEditing ? "active" : ""} onClick={() => setGiftEditing((value) => !value)}>
-                  {giftEditing ? "完成编辑" : "编辑文字"}
+                  {giftEditing ? "完成编辑" : "编辑母版"}
                 </button>
                 <button onClick={saveGiftCopy} disabled={giftSaving}>
                   {giftSaving ? <LoaderCircle className="spin" size={16} /> : <Save size={16} />}
@@ -1521,10 +1512,7 @@ function renderTaskPoster(task, product, rows, ref, options = {}) {
       subject={task.subject}
       rows={rows}
       editable={options.giftEditing}
-      override={{
-        ...(product.giftTemplateOverride || {}),
-        ...(product.giftCopyOverrides?.[task.subject] || {}),
-      }}
+      override={product.giftTemplateOverride || {}}
       onChange={options.onGiftCopyChange}
     />
   );
@@ -1873,14 +1861,6 @@ const GiftPoster = React.forwardRef(function GiftPoster(
     const value = event.currentTarget.textContent.trim();
     if (value) onChange?.({ [field]: value });
   };
-  const commitLesson = (index, event) => {
-    const title = event.currentTarget.textContent.trim();
-    if (!title) return;
-    const lessons = gift.lessons.map((lesson, lessonIndex) =>
-      lessonIndex === index ? { ...lesson, title } : lesson,
-    );
-    onChange?.({ lessons });
-  };
   const lessonTotal = gift.lessons.length;
   const baseHeight = product.grade === "高一" ? 1395 : 1152;
   const posterHeight = Math.max(
@@ -1947,7 +1927,7 @@ const GiftPoster = React.forwardRef(function GiftPoster(
                 {gift.lessons.map((lesson, index) => (
                   <tr key={lesson.id ?? `${gift.name}-${index}`}>
                     <td>第{toChineseLesson(index + 1)}讲</td>
-                    <td className={editable ? "gift-editable" : ""} contentEditable={editable} suppressContentEditableWarning onBlur={(event) => commitLesson(index, event)}>{lesson.title}</td>
+                    <td>{lesson.title}</td>
                   </tr>
                 ))}
               </tbody>
