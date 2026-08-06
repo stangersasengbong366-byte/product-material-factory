@@ -1607,7 +1607,10 @@ const PricePoster = React.forwardRef(function PricePoster({ product, quoteMode =
       <footer className="notes-row">
         <div className="note-label"><span>说</span><span>明</span></div>
         <ol>{(price.notes?.length ? price.notes : ["具体课程与价格以产品配置为准。", "报名权益以实际购买科目为准。"]).map((note, index) => <li key={index}>{note}</li>)}</ol>
-        <div className="gift-box"><span>报名赠送多个礼品</span></div>
+        <div className="gift-box">
+          <i className="gift-bow" aria-hidden="true" />
+          <span>报名赠送多个礼品</span>
+        </div>
       </footer>
     </article>
   );
