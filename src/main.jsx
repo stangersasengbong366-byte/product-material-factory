@@ -1744,7 +1744,7 @@ const VideoPoster = React.forwardRef(function VideoPoster(
           清北主理人七轮打磨的课程，国家正规ISBN版号，多轮审核校定稿，内容质量有保障
         </Benefit>
         <Benefit icon="▶" title="灵活选择">
-          一次更新整个学期内容，30分钟一节，可根据孩子薄弱模块、学校进度、时间来学习
+          30分钟一节，可根据孩子薄弱模块、学校进度、时间来学习
         </Benefit>
       </section>
       <section className="figma-video-outline">
