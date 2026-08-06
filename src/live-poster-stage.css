@@ -22,7 +22,7 @@
   height: 107px;
   border: 0;
   border-radius: 0;
-  background: url("/figma-assets/live-header-curve.svg") center / 100% 100% no-repeat;
+  background: var(--live-header-curve) center / 100% 100% no-repeat;
   filter: none;
 }
 .figma-live .figma-live-title > span {
