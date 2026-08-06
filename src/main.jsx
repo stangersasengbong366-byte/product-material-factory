@@ -471,11 +471,21 @@ function TaskWorkspace({
     if (activeTask?.type !== "赠课") return;
     const subject = activeTask.subject;
     const current = product.giftCopyOverrides?.[subject] || {};
+    const templatePatch = Object.fromEntries(
+      Object.entries(patch).filter(([key]) => ["name", "intro"].includes(key)),
+    );
+    const subjectPatch = Object.fromEntries(
+      Object.entries(patch).filter(([key]) => key === "lessons"),
+    );
     onUpdateProduct({
       ...product,
+      giftTemplateOverride: {
+        ...(product.giftTemplateOverride || {}),
+        ...templatePatch,
+      },
       giftCopyOverrides: {
         ...(product.giftCopyOverrides || {}),
-        [subject]: { ...current, ...patch },
+        [subject]: { ...current, ...subjectPatch },
       },
     });
   };
@@ -1360,7 +1370,7 @@ function VideoAssociationSummary({ draft }) {
                 <div
                   key={`${outlineQuarter}-${outlineTrack}-${index}-${row.title}`}
                 >
-                  <span>{index + 1}</span>
+                  <span>{row.no ?? index + 1}</span>
                   <span>{row.module || "其他模块"}</span>
                   <span>{row.scoreShare || "—"}</span>
                   <strong>
@@ -1511,7 +1521,10 @@ function renderTaskPoster(task, product, rows, ref, options = {}) {
       subject={task.subject}
       rows={rows}
       editable={options.giftEditing}
-      override={product.giftCopyOverrides?.[task.subject] || {}}
+      override={{
+        ...(product.giftTemplateOverride || {}),
+        ...(product.giftCopyOverrides?.[task.subject] || {}),
+      }}
       onChange={options.onGiftCopyChange}
     />
   );
@@ -1782,8 +1795,8 @@ const VideoPoster = React.forwardRef(function VideoPoster(
                 <b>{group.scoreShare || "—"}</b>
               </div>
               {group.items.map(({ row, index }) => (
-                <p key={row.id ?? row.no ?? index}>
-                  <span>{index + 1}</span>
+                <p key={row.id ?? `${row.no ?? index}-${index}`}>
+                  <span>{row.no ?? index + 1}</span>
                   <strong>
                     <span>{row.title}</span>
                     {isCourseLayered(row) ? (
@@ -1813,15 +1826,14 @@ const VideoPoster = React.forwardRef(function VideoPoster(
 });
 function groupVideoOutlineRows(rows) {
   const groups = [];
-  const lookup = new Map();
   rows.forEach((row, index) => {
     const module = row.module || inferModule(row.title, index);
-    if (!lookup.has(module)) {
-      const group = { module, scoreShare: row.scoreShare || "", items: [] };
-      lookup.set(module, group);
-      groups.push(group);
-    }
-    const group = lookup.get(module);
+    const previous = groups[groups.length - 1];
+    const group =
+      previous?.module === module
+        ? previous
+        : { module, scoreShare: row.scoreShare || "", items: [] };
+    if (group !== previous) groups.push(group);
     if (!group.scoreShare && row.scoreShare) group.scoreShare = row.scoreShare;
     group.items.push({ row, index });
   });
@@ -1856,7 +1868,7 @@ const GiftPoster = React.forwardRef(function GiftPoster(
       ? override.lessons
       : sourceGift.lessons.map((lesson) => ({ title: lesson.title })),
   };
-  const displaySubject = override.subject ?? subject;
+  const displaySubject = subject;
   const commitText = (field, event) => {
     const value = event.currentTarget.textContent.trim();
     if (value) onChange?.({ [field]: value });
@@ -1917,7 +1929,7 @@ const GiftPoster = React.forwardRef(function GiftPoster(
             </span>
           </h2>
           <div>
-            <b className={editable ? "gift-editable" : ""} contentEditable={editable} suppressContentEditableWarning onBlur={(event) => commitText("subject", event)}>{displaySubject}</b>
+            <b>{displaySubject}</b>
             <span>{lessonTotal}课时｜<i className={editable ? "gift-editable" : ""} contentEditable={editable} suppressContentEditableWarning onBlur={(event) => commitText("intro", event)}>{gift.intro}</i></span>
           </div>
         </header>

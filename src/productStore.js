@@ -44,7 +44,17 @@ export function normalizeProduct(input) {
         (input?.id === demoProduct.id ? demoProduct.gifts : {}),
     ),
     giftCopyOverrides: normalizeGiftCopyOverrides(input?.giftCopyOverrides),
+    giftTemplateOverride: normalizeGiftTemplateOverride(
+      input?.giftTemplateOverride,
+    ),
     priceConfig: normalizePriceConfig(input?.priceConfig, input),
+  };
+}
+
+function normalizeGiftTemplateOverride(value = {}) {
+  return {
+    ...(value?.name ? { name: String(value.name) } : {}),
+    ...(value?.intro ? { intro: String(value.intro) } : {}),
   };
 }
 
@@ -230,11 +240,26 @@ export function getVideoRows(
     .flatMap((quarter) => {
       const stage = subjectLibrary[quarter];
       if (!stage) return [];
-      return [
-        ...(stage.common || []),
-        ...(stage.layered || []),
-        ...(stage[bucket] || []),
-      ].map((row, index) => ({ ...row, no: index + 1, quarter, track }));
+      const allowedBuckets = new Set(["common", "layered", bucket]);
+      const orderedRows = Array.isArray(stage.ordered)
+        ? stage.ordered
+        : [
+            ...(stage.common || []),
+            ...(stage.layered || []),
+            ...(stage[bucket] || []),
+          ].sort(
+            (left, right) =>
+              Number(left.sourceOrder ?? Number.MAX_SAFE_INTEGER) -
+              Number(right.sourceOrder ?? Number.MAX_SAFE_INTEGER),
+          );
+      return orderedRows
+        .filter((row) => allowedBuckets.has(row.bucket))
+        .map((row, index) => ({
+          ...row,
+          no: row.no ?? index + 1,
+          quarter,
+          track,
+        }));
     });
 }
 
@@ -326,7 +351,7 @@ function normalizeVideoLibrary(data) {
         ["common", "target", "elite", "layered"].forEach((bucket) => {
           target[bucket] = (buckets?.[bucket] || []).map((row, index) => ({
             ...row,
-            no: index + 1,
+            no: row.no ?? index + 1,
             grade,
             subject,
             quarter,
@@ -334,6 +359,19 @@ function normalizeVideoLibrary(data) {
             title: row.title || "未命名知识视频",
           }));
         });
+        target.ordered = (buckets?.ordered || [
+          ...(buckets?.common || []),
+          ...(buckets?.target || []),
+          ...(buckets?.elite || []),
+          ...(buckets?.layered || []),
+        ]).map((row, index) => ({
+          ...row,
+          no: row.no ?? index + 1,
+          grade,
+          subject,
+          quarter,
+          title: row.title || "未命名知识视频",
+        }));
       }),
     ),
   );
