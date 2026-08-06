@@ -267,7 +267,7 @@
   isolation: isolate;
 }
 .figma-gift.is-exporting .gift-outline-list {
-  background: #fff !important;
+  background: transparent !important;
   opacity: 1 !important;
   mix-blend-mode: normal !important;
   box-shadow: none !important;

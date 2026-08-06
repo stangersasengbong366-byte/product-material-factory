@@ -179,8 +179,10 @@
   background: linear-gradient(90deg, #ff404f, #ff7847);
 }
 
-/* 保留已验证的导出隔离，避免 html2canvas 将外层渐变混入白色内容区。 */
-.figma-gift.is-exporting .gift-card,
-.figma-gift.is-exporting .gift-outline-list {
+/* 卡片主体保持白底，列表外壳必须透明，避免覆盖顶部母版渐变。 */
+.figma-gift.is-exporting .gift-card {
   background: #fff !important;
+}
+.figma-gift.is-exporting .gift-outline-list {
+  background: transparent !important;
 }
