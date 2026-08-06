@@ -157,7 +157,7 @@
 .figma-gift.grade-two .gift-card,
 .figma-gift.grade-three .gift-card {
   border-color: var(--gift-card-border);
-  background: #fffbf5;
+  background: #fff;
 }
 .figma-gift.grade-one .gift-top-gradient {
   background: linear-gradient(90deg, #ffffff 0%, #ffe0d4 100%);
