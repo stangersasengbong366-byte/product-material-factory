@@ -1862,11 +1862,7 @@ const GiftPoster = React.forwardRef(function GiftPoster(
     if (value) onChange?.({ [field]: value });
   };
   const lessonTotal = gift.lessons.length;
-  const baseHeight = product.grade === "高一" ? 1395 : 1152;
-  const posterHeight = Math.max(
-    baseHeight,
-    545 + lessonTotal * 85,
-  );
+  const posterHeight = 545 + lessonTotal * 85;
   return (
     <article
       ref={ref}
