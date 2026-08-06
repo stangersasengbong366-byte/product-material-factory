@@ -1894,6 +1894,7 @@ const GiftPoster = React.forwardRef(function GiftPoster(
       style={{ height: `${posterHeight}px` }}
     >
       <div className="gift-card" style={{ height: `${posterHeight - 67}px` }}>
+        <div className="gift-top-gradient" aria-hidden="true" />
         <img
           className="gift-logo"
           src={

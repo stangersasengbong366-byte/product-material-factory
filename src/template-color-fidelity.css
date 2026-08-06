@@ -159,10 +159,14 @@
   border-color: var(--gift-card-border);
   background: #fffbf5;
 }
-.figma-gift.grade-one .gift-card::before,
-.figma-gift.grade-two .gift-card::before,
-.figma-gift.grade-three .gift-card::before {
-  background: linear-gradient(90deg, #fff 0%, var(--gift-top-glow) 100%);
+.figma-gift.grade-one .gift-top-gradient {
+  background: linear-gradient(90deg, #ffffff 0%, #ffe0d4 100%);
+}
+.figma-gift.grade-two .gift-top-gradient {
+  background: linear-gradient(90deg, #ffffff 0%, #d4ebff 100%);
+}
+.figma-gift.grade-three .gift-top-gradient {
+  background: linear-gradient(90deg, #ffffff 0%, #d4d7ff 100%);
 }
 .figma-gift.grade-one .gift-card > header h2 span,
 .figma-gift.grade-two .gift-card > header h2 span,
