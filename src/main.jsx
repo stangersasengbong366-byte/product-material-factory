@@ -1614,9 +1614,7 @@ const LivePoster = React.forwardRef(function LivePoster(
   const groups = groupLiveRows(rows, product.coverageQuarters);
   const multi = groups.length > 1;
   const gradeTheme = gradeThemeKey(product.grade);
-  const baseHeight = product.grade === "高一" ? 2310 : 2824;
-  const contentHeight = 661 + groups.length * 159 + rows.length * 78;
-  const posterHeight = Math.max(baseHeight, contentHeight);
+  const posterHeight = 661 + groups.length * 159 + rows.length * 78;
   return (
     <article
       ref={ref}

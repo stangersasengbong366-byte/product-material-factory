@@ -1,6 +1,6 @@
 .figma-video {
   height: auto;
-  min-height: 1720px;
+  min-height: 0;
   padding-bottom: 30px;
   overflow: hidden;
   --video-accent: #ff393f;
@@ -12,7 +12,7 @@
 .figma-video.grade-two,
 .figma-video.grade-three {
   height: auto;
-  min-height: 2197px;
+  min-height: 0;
 }
 .figma-video.grade-two .figma-video-subject,
 .figma-video.grade-three .figma-video-subject {
@@ -92,7 +92,7 @@
 .figma-video.grade-two .figma-video-outline,
 .figma-video.grade-three .figma-video-outline {
   height: auto;
-  min-height: 1115px;
+  min-height: 0;
   margin-top: 7px;
   padding: 24px 20px 22px;
   display: flex;
@@ -100,11 +100,9 @@
   overflow: visible;
   box-shadow: 0 8px 28px var(--video-shadow);
 }
-.figma-video.grade-two .figma-video-outline {
-  min-height: 1637px;
-}
+.figma-video.grade-two .figma-video-outline,
 .figma-video.grade-three .figma-video-outline {
-  min-height: 1640px;
+  min-height: 0;
 }
 .figma-video .outline-top {
   height: 66px;
@@ -114,7 +112,7 @@
   height: 56px;
   box-sizing: border-box;
   padding: 14px 28px;
-  font-size: 20px;
+  font-size: 22px;
 }
 .figma-video .outline-legends {
   padding-top: 1px;
@@ -125,7 +123,7 @@
   display: flex;
   align-items: center;
   gap: 18px;
-  font-size: 13px;
+  font-size: 15px;
   line-height: 22px;
 }
 .figma-video .outline-legends p b {
@@ -158,7 +156,7 @@
   grid-template-columns: 105px minmax(0, 1fr) 155px;
 }
 .figma-video .outline-head {
-  font-size: 17px;
+  font-size: 19px;
 }
 .figma-video.grade-two .outline-head {
   background: rgba(191, 213, 255, 0.96);
@@ -197,13 +195,13 @@
   background: #f4edff;
 }
 .figma-video .outline-module-title strong {
-  font-size: 22px;
+  font-size: 24px;
   line-height: 1.4;
 }
 .figma-video .outline-module-title b {
   flex: 0 0 auto;
   color: #f0643f;
-  font-size: 22px;
+  font-size: 24px;
 }
 .figma-video .outline-rows p {
   min-height: 46px;
@@ -220,7 +218,7 @@
   overflow-wrap: anywhere;
 }
 .figma-video .outline-rows p > span:first-child {
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 500;
 }
 .figma-video .outline-rows p strong {
@@ -228,7 +226,7 @@
   align-items: center;
   gap: 10px;
   justify-content: flex-start;
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1.55;
 }
 .figma-video .outline-rows p strong > span {
@@ -243,7 +241,7 @@
   border-radius: 10px;
   background: #fff0eb;
   color: #f0523b;
-  font-size: 11px;
+  font-size: 13px;
   font-style: normal;
   font-weight: 700;
   line-height: 1.2;
@@ -252,7 +250,7 @@
 .figma-video .outline-rows p > span:last-child {
   border-right: 0;
   color: #f5a623;
-  font-size: 18px;
+  font-size: 20px;
   letter-spacing: 2px;
   white-space: nowrap;
   text-shadow: 0 1px 0 rgba(190, 112, 0, 0.12);
