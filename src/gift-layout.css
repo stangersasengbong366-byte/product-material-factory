@@ -23,10 +23,8 @@
   letter-spacing: 13px;
 }
 .figma-gift .gift-card {
-  position: absolute;
-  left: 30px;
-  right: 30px;
-  top: 32px;
+  position: relative;
+  margin: 32px 30px 35px;
   height: auto;
   min-height: 0;
   padding: 0;

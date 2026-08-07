@@ -1869,14 +1869,12 @@ const GiftPoster = React.forwardRef(function GiftPoster(
     if (value) onChange?.({ [field]: value });
   };
   const lessonTotal = gift.lessons.length;
-  const posterHeight = 545 + lessonTotal * 85;
   return (
     <article
       ref={ref}
       className={`figma-poster figma-gift ${gradeTheme}`}
-      style={{ height: `${posterHeight}px` }}
     >
-      <div className="gift-card" style={{ height: `${posterHeight - 67}px` }}>
+      <div className="gift-card">
         <div className="gift-top-gradient" aria-hidden="true" />
         <img
           className="gift-logo"
