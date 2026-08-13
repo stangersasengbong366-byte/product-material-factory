@@ -163,6 +163,15 @@ export function buildMaterialTasks(product) {
       subject: "非文综价格",
       type: "价格",
       track: "非文综阶梯价",
+      priceMode: "nonWenZong",
+      count: 1,
+    });
+    tasks.push({
+      id: slug("price-system-non-wenzong-no-single"),
+      subject: "非文综无单科价格",
+      type: "价格",
+      track: "非文综阶梯价（无单科）",
+      priceMode: "nonWenZongNoSingle",
       count: 1,
     });
     if (product.priceConfig?.wenZongMode !== "none")
@@ -174,6 +183,7 @@ export function buildMaterialTasks(product) {
           product.priceConfig?.wenZongMode === "same"
             ? "文综同价"
             : "文综一口价",
+        priceMode: "wenZong",
         count: 1,
       });
   }

@@ -1523,7 +1523,7 @@ function CourseInventory({ product }) {
   );
 }
 function renderTaskPoster(task, product, rows, ref, options = {}) {
-  if (task.type === "价格") return <PricePoster ref={ref} product={product} quoteMode={task.track === "非文综阶梯价" ? "nonWenZong" : "wenZong"} editable={options.priceEditing} onChange={options.onPriceCopyChange} />;
+  if (task.type === "价格") return <PricePoster ref={ref} product={product} quoteMode={task.priceMode || (task.track === "非文综阶梯价" ? "nonWenZong" : "wenZong")} editable={options.priceEditing} onChange={options.onPriceCopyChange} />;
   if (task.type === "学法直播")
     return (
       <LivePoster
@@ -1579,6 +1579,7 @@ function effectivePriceHours(product) {
 const PricePoster = React.forwardRef(function PricePoster({ product, quoteMode = "nonWenZong", editable = false, onChange }, ref) {
   const price = product.priceConfig || {};
   const isWenZong = quoteMode === "wenZong";
+  const omitSinglePrice = quoteMode === "nonWenZongNoSingle";
   const effectiveHours = effectivePriceHours(product);
   const theme = product.grade === "高二" ? "theme-blue" : product.grade === "高三" ? "theme-purple" : "theme-peach";
   const cardLabel = product.stage || product.name.replace(product.grade, "") || "课程卡";
@@ -1603,7 +1604,7 @@ const PricePoster = React.forwardRef(function PricePoster({ product, quoteMode =
     event.preventDefault();
     event.currentTarget.blur();
   };
-  const rows = [1, 2, 3, 4, 5, 6].map((count) => {
+  const rows = (omitSinglePrice ? [2, 3, 4, 5, 6] : [1, 2, 3, 4, 5, 6]).map((count) => {
     const unit = count === 1 ? price.tier1 : count === 2 ? price.tier2 : price.tier3;
     const official = Number(price.officialUnitPrice || 0) * count;
     const payment = Number(unit || 0) * count;
