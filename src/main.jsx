@@ -452,6 +452,8 @@ function TaskWorkspace({
 }) {
   const [giftEditing, setGiftEditing] = useState(false);
   const [giftSaving, setGiftSaving] = useState(false);
+  const [priceEditing, setPriceEditing] = useState(false);
+  const [priceSaving, setPriceSaving] = useState(false);
   const typeStats = Object.fromEntries(
     ["学法直播", "知识视频", "赠课", "价格"].map((type) => [
       type,
@@ -466,7 +468,10 @@ function TaskWorkspace({
       },
     ]),
   );
-  useEffect(() => setGiftEditing(false), [activeTaskId, product.id]);
+  useEffect(() => {
+    setGiftEditing(false);
+    setPriceEditing(false);
+  }, [activeTaskId, product.id]);
   const updateGiftCopy = (patch) => {
     if (activeTask?.type !== "赠课") return;
     const templatePatch = Object.fromEntries(
@@ -484,6 +489,26 @@ function TaskWorkspace({
     setGiftSaving(true);
     try { await onSaveCloud(); }
     finally { setGiftSaving(false); }
+  };
+  const updatePriceCopy = (patch) => {
+    if (activeTask?.type !== "价格") return;
+    const templatePatch = Object.fromEntries(
+      Object.entries(patch).filter(([key]) =>
+        ["titleGrade", "titleProduct", "titleSuffix", "tag", "wenZongTag", "wenZongCourseLabel"].includes(key),
+      ),
+    );
+    onUpdateProduct({
+      ...product,
+      priceConfig: {
+        ...(product.priceConfig || {}),
+        ...templatePatch,
+      },
+    });
+  };
+  const savePriceCopy = async () => {
+    setPriceSaving(true);
+    try { await onSaveCloud(); }
+    finally { setPriceSaving(false); }
   };
   return (
     <>
@@ -577,8 +602,8 @@ function TaskWorkspace({
           <div className="preview-toolbar">
             <div>
               <Eye size={17} />
-              <span>{activeTask?.type === "赠课" ? "赠课母版预览" : "素材预览"}</span>
-              <em>{activeTask?.type === "赠课" ? "自动同步全部学科" : product.name}</em>
+              <span>{activeTask?.type === "赠课" ? "赠课母版预览" : activeTask?.type === "价格" ? "价格母版预览" : "素材预览"}</span>
+              <em>{activeTask?.type === "赠课" ? "自动同步全部学科" : activeTask?.type === "价格" ? "自动同步全部价格素材" : product.name}</em>
             </div>
             <div className="preview-actions">
             {activeTask?.type === "赠课" ? (
@@ -588,6 +613,17 @@ function TaskWorkspace({
                 </button>
                 <button onClick={saveGiftCopy} disabled={giftSaving}>
                   {giftSaving ? <LoaderCircle className="spin" size={16} /> : <Save size={16} />}
+                  保存云端
+                </button>
+              </>
+            ) : null}
+            {activeTask?.type === "价格" ? (
+              <>
+                <button className={priceEditing ? "active" : ""} onClick={() => setPriceEditing((value) => !value)}>
+                  {priceEditing ? "完成编辑" : "编辑母版"}
+                </button>
+                <button onClick={savePriceCopy} disabled={priceSaving}>
+                  {priceSaving ? <LoaderCircle className="spin" size={16} /> : <Save size={16} />}
                   保存云端
                 </button>
               </>
@@ -611,6 +647,8 @@ function TaskWorkspace({
                 renderTaskPoster(activeTask, product, rows, posterRef, {
                   giftEditing,
                   onGiftCopyChange: updateGiftCopy,
+                  priceEditing,
+                  onPriceCopyChange: updatePriceCopy,
                 })
               ) : (
                 <div className="empty-state">
@@ -966,9 +1004,9 @@ function PriceConfigEditor({ draft, setDraft }) {
   );
   return <div className="price-config-stack">
     <section className="config-card price-config-card">
-      <div className="config-heading"><div><span>价格表标题</span><h2>基础展示信息</h2></div><em>{priceTotalLessons(draft)} 课时权益</em></div>
+      <div className="config-heading"><div><span>价格表标题</span><h2>顶部文案与展示信息</h2></div><em>{priceTotalLessons(draft)} 课时权益</em></div>
       <div className="price-config-grid">
-        <label>产品名称<input value={draft.name} disabled /></label><label>年级<input value={draft.grade} disabled /></label><label>课程卡型<input value={draft.stage} disabled /></label>
+        {textField("年级标题", "titleGrade")}{textField("产品标题", "titleProduct")}{textField("第二行标题", "titleSuffix")}
         {textField("标题下方适用科目", "subjectScope")}{textField("右上角标签", "tag")}
       </div>
     </section>
@@ -988,7 +1026,7 @@ function PriceConfigEditor({ draft, setDraft }) {
         <header><span>文综</span><strong>一口价格与课程权益</strong><em>政治、历史、地理单独维护</em></header>
         <div className="price-column-block">
           <div className="price-fieldset-heading"><strong>文综价格</strong><span>无文综、同价或一口价</span></div>
-          <div className="price-config-grid"><label>文综状态<select value={price.wenZongMode || "none"} onChange={(e) => update("wenZongMode", e.target.value)}><option value="none">无文综</option><option value="same">文综与非文综同价</option><option value="deal">文综一口价</option></select></label>{textField("文综官网原价/科", "wenZongOfficialUnitPrice", "number")}{textField("文综一口价/科", "wenZongDealUnitPrice", "number")}</div>
+          <div className="price-config-grid"><label>文综状态<select value={price.wenZongMode || "none"} onChange={(e) => update("wenZongMode", e.target.value)}><option value="none">无文综</option><option value="same">文综与非文综同价</option><option value="deal">文综一口价</option></select></label>{textField("文综右上角标签", "wenZongTag")}{textField("文综课程名称", "wenZongCourseLabel")}{textField("文综官网原价/科", "wenZongOfficialUnitPrice", "number")}{textField("文综一口价/科", "wenZongDealUnitPrice", "number")}</div>
         </div>
         <div className="price-column-block">
           <div className="price-fieldset-heading"><strong>文综课程包含</strong><span>如与非文综不同可单独维护</span></div>
@@ -1485,7 +1523,7 @@ function CourseInventory({ product }) {
   );
 }
 function renderTaskPoster(task, product, rows, ref, options = {}) {
-  if (task.type === "价格") return <PricePoster ref={ref} product={product} quoteMode={task.track === "非文综阶梯价" ? "nonWenZong" : "wenZong"} />;
+  if (task.type === "价格") return <PricePoster ref={ref} product={product} quoteMode={task.track === "非文综阶梯价" ? "nonWenZong" : "wenZong"} editable={options.priceEditing} onChange={options.onPriceCopyChange} />;
   if (task.type === "学法直播")
     return (
       <LivePoster
@@ -1538,18 +1576,33 @@ function effectivePriceHours(product) {
   };
 }
 
-const PricePoster = React.forwardRef(function PricePoster({ product, quoteMode = "nonWenZong" }, ref) {
+const PricePoster = React.forwardRef(function PricePoster({ product, quoteMode = "nonWenZong", editable = false, onChange }, ref) {
   const price = product.priceConfig || {};
   const isWenZong = quoteMode === "wenZong";
   const effectiveHours = effectivePriceHours(product);
   const theme = product.grade === "高二" ? "theme-blue" : product.grade === "高三" ? "theme-purple" : "theme-peach";
   const cardLabel = product.stage || product.name.replace(product.grade, "") || "课程卡";
-  const gradeDisplayName = `${product.grade}年级`;
-  const productDisplayName = product.name.startsWith(gradeDisplayName)
-    ? product.name.slice(gradeDisplayName.length)
+  const defaultGradeDisplayName = `${product.grade}年级`;
+  const defaultProductDisplayName = product.name.startsWith(defaultGradeDisplayName)
+    ? product.name.slice(defaultGradeDisplayName.length)
     : product.name.startsWith(product.grade)
       ? product.name.slice(product.grade.length)
       : product.name;
+  const gradeDisplayName = price.titleGrade || defaultGradeDisplayName;
+  const productDisplayName = price.titleProduct || defaultProductDisplayName;
+  const titleSuffix = price.titleSuffix || "价格体系";
+  const tagLabel = isWenZong ? (price.wenZongTag || "文综") : (price.tag || "非文综");
+  const wenZongCourseLabel = price.wenZongCourseLabel || "文综单科";
+  const commitText = (field, currentValue, event) => {
+    const value = event.currentTarget.textContent.trim();
+    if (value) onChange?.({ [field]: value });
+    else event.currentTarget.textContent = currentValue;
+  };
+  const finishOnEnter = (event) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    event.currentTarget.blur();
+  };
   const rows = [1, 2, 3, 4, 5, 6].map((count) => {
     const unit = count === 1 ? price.tier1 : count === 2 ? price.tier2 : price.tier3;
     const official = Number(price.officialUnitPrice || 0) * count;
@@ -1565,15 +1618,20 @@ const PricePoster = React.forwardRef(function PricePoster({ product, quoteMode =
         <div className="glass-card back-card" />
         <div className="glass-card front-card"><span className={`card-title ${cardLabel.length >= 5 ? "is-long" : cardLabel.length === 4 ? "is-medium" : "is-short"}`}>{cardLabel}</span></div>
       </div>
-      <div className="tag-ribbon">{isWenZong ? "文综" : (price.tag || "非文综")}</div>
+      <div className={`tag-ribbon ${editable ? "price-editable" : ""}`} contentEditable={editable} suppressContentEditableWarning onKeyDown={finishOnEnter} onBlur={(event) => commitText(isWenZong ? "wenZongTag" : "tag", tagLabel, event)}>{tagLabel}</div>
       <header className="poster-title">
-        <h2><span className="poster-grade-name">{gradeDisplayName}</span><span className="poster-product-name">{productDisplayName}</span><br />价格体系</h2>
+        <h2>
+          <span className={`poster-grade-name ${editable ? "price-editable" : ""}`} contentEditable={editable} suppressContentEditableWarning onKeyDown={finishOnEnter} onBlur={(event) => commitText("titleGrade", gradeDisplayName, event)}>{gradeDisplayName}</span>
+          <span className={`poster-product-name ${editable ? "price-editable" : ""}`} contentEditable={editable} suppressContentEditableWarning onKeyDown={finishOnEnter} onBlur={(event) => commitText("titleProduct", productDisplayName, event)}>{productDisplayName}</span>
+          <br />
+          <span className={`poster-title-suffix ${editable ? "price-editable" : ""}`} contentEditable={editable} suppressContentEditableWarning onKeyDown={finishOnEnter} onBlur={(event) => commitText("titleSuffix", titleSuffix, event)}>{titleSuffix}</span>
+        </h2>
         <p className="poster-subtitle">{isWenZong ? "政治・历史・地理" : (price.subjectScope || "适用科目以产品配置为准")}</p>
       </header>
       <section className="table-card">
         {isWenZong ? <div className="price-table wenzong-price-table">
           <div className="wenzong-row wenzong-header"><div>课程</div><div>官网原价</div><div>优惠券</div><div>一口价</div></div>
-          <div className="wenzong-row wenzong-body"><div className="wenzong-course">文综单科</div><div className="price-cell official-cell">¥{Number(price.wenZongMode === "same" ? price.officialUnitPrice : price.wenZongOfficialUnitPrice || 0).toLocaleString()}</div><div className="price-cell">¥{Math.max(0, Number(price.wenZongMode === "same" ? price.officialUnitPrice - price.tier1 : (price.wenZongOfficialUnitPrice || 0) - (price.wenZongDealUnitPrice || 0))).toLocaleString()}</div><div className="wenzong-deal">¥{Number(price.wenZongMode === "same" ? price.tier1 : price.wenZongDealUnitPrice || 0).toLocaleString()}<span className="unit">/科</span></div></div>
+          <div className="wenzong-row wenzong-body"><div className={`wenzong-course ${editable ? "price-editable" : ""}`} contentEditable={editable} suppressContentEditableWarning onKeyDown={finishOnEnter} onBlur={(event) => commitText("wenZongCourseLabel", wenZongCourseLabel, event)}>{wenZongCourseLabel}</div><div className="price-cell official-cell">¥{Number(price.wenZongMode === "same" ? price.officialUnitPrice : price.wenZongOfficialUnitPrice || 0).toLocaleString()}</div><div className="price-cell">¥{Math.max(0, Number(price.wenZongMode === "same" ? price.officialUnitPrice - price.tier1 : (price.wenZongOfficialUnitPrice || 0) - (price.wenZongDealUnitPrice || 0))).toLocaleString()}</div><div className="wenzong-deal">¥{Number(price.wenZongMode === "same" ? price.tier1 : price.wenZongDealUnitPrice || 0).toLocaleString()}<span className="unit">/科</span></div></div>
         </div> : <div className="price-table">
           <div className="table-row header"><div>科目</div><div>官网价格</div><div>优惠券</div><div>优惠后每科</div><div>支付价格</div></div>
         {rows.map((row) => (
