@@ -205,6 +205,7 @@ function normalizePriceConfig(value = {}, product = {}) {
     titleProduct: String(config.titleProduct || productTitle || product?.stage || "课程卡"),
     titleSuffix: String(config.titleSuffix || "价格体系"),
     subjectScope: String(config.subjectScope || "语数英物化"),
+    wenZongSubjectScope: String(config.wenZongSubjectScope || "政治・历史・地理"),
     tag: String(config.tag || "非文综"),
     wenZongTag: String(config.wenZongTag || "文综"),
     wenZongCourseLabel: String(config.wenZongCourseLabel || "文综单科"),
