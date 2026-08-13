@@ -182,10 +182,22 @@ export function buildMaterialTasks(product) {
 
 function normalizePriceConfig(value = {}, product = {}) {
   const config = value || {};
+  const gradeTitle = `${String(product?.grade || "高一")}年级`;
+  const productName = String(product?.name || "课程卡");
+  const productTitle = productName.startsWith(gradeTitle)
+    ? productName.slice(gradeTitle.length)
+    : productName.startsWith(String(product?.grade || ""))
+      ? productName.slice(String(product?.grade || "").length)
+      : productName;
   return {
     enabled: config.enabled !== false,
+    titleGrade: String(config.titleGrade || gradeTitle),
+    titleProduct: String(config.titleProduct || productTitle || product?.stage || "课程卡"),
+    titleSuffix: String(config.titleSuffix || "价格体系"),
     subjectScope: String(config.subjectScope || "语数英物化"),
     tag: String(config.tag || "非文综"),
+    wenZongTag: String(config.wenZongTag || "文综"),
+    wenZongCourseLabel: String(config.wenZongCourseLabel || "文综单科"),
     officialUnitPrice: Number(config.officialUnitPrice || 0),
     tier1: Number(config.tier1 || 0),
     tier2: Number(config.tier2 || 0),
