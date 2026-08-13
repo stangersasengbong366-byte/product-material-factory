@@ -494,7 +494,7 @@ function TaskWorkspace({
     if (activeTask?.type !== "价格") return;
     const templatePatch = Object.fromEntries(
       Object.entries(patch).filter(([key]) =>
-        ["titleGrade", "titleProduct", "titleSuffix", "tag", "wenZongTag", "wenZongCourseLabel"].includes(key),
+        ["titleGrade", "titleProduct", "titleSuffix", "subjectScope", "wenZongSubjectScope", "tag", "wenZongTag", "wenZongCourseLabel"].includes(key),
       ),
     );
     onUpdateProduct({
@@ -1026,7 +1026,7 @@ function PriceConfigEditor({ draft, setDraft }) {
         <header><span>文综</span><strong>一口价格与课程权益</strong><em>政治、历史、地理单独维护</em></header>
         <div className="price-column-block">
           <div className="price-fieldset-heading"><strong>文综价格</strong><span>无文综、同价或一口价</span></div>
-          <div className="price-config-grid"><label>文综状态<select value={price.wenZongMode || "none"} onChange={(e) => update("wenZongMode", e.target.value)}><option value="none">无文综</option><option value="same">文综与非文综同价</option><option value="deal">文综一口价</option></select></label>{textField("文综右上角标签", "wenZongTag")}{textField("文综课程名称", "wenZongCourseLabel")}{textField("文综官网原价/科", "wenZongOfficialUnitPrice", "number")}{textField("文综一口价/科", "wenZongDealUnitPrice", "number")}</div>
+          <div className="price-config-grid"><label>文综状态<select value={price.wenZongMode || "none"} onChange={(e) => update("wenZongMode", e.target.value)}><option value="none">无文综</option><option value="same">文综与非文综同价</option><option value="deal">文综一口价</option></select></label>{textField("文综适用科目", "wenZongSubjectScope")}{textField("文综右上角标签", "wenZongTag")}{textField("文综课程名称", "wenZongCourseLabel")}{textField("文综官网原价/科", "wenZongOfficialUnitPrice", "number")}{textField("文综一口价/科", "wenZongDealUnitPrice", "number")}</div>
         </div>
         <div className="price-column-block">
           <div className="price-fieldset-heading"><strong>文综课程包含</strong><span>如与非文综不同可单独维护</span></div>
@@ -1593,6 +1593,10 @@ const PricePoster = React.forwardRef(function PricePoster({ product, quoteMode =
   const productDisplayName = price.titleProduct || defaultProductDisplayName;
   const titleSuffix = price.titleSuffix || "价格体系";
   const tagLabel = isWenZong ? (price.wenZongTag || "文综") : (price.tag || "非文综");
+  const subjectScopeLabel = isWenZong
+    ? (price.wenZongSubjectScope || "政治・历史・地理")
+    : (price.subjectScope || "适用科目以产品配置为准");
+  const subjectScopeField = isWenZong ? "wenZongSubjectScope" : "subjectScope";
   const wenZongCourseLabel = price.wenZongCourseLabel || "文综单科";
   const commitText = (field, currentValue, event) => {
     const value = event.currentTarget.textContent.trim();
@@ -1627,7 +1631,7 @@ const PricePoster = React.forwardRef(function PricePoster({ product, quoteMode =
           <br />
           <span className={`poster-title-suffix ${editable ? "price-editable" : ""}`} contentEditable={editable} suppressContentEditableWarning onKeyDown={finishOnEnter} onBlur={(event) => commitText("titleSuffix", titleSuffix, event)}>{titleSuffix}</span>
         </h2>
-        <p className="poster-subtitle">{isWenZong ? "政治・历史・地理" : (price.subjectScope || "适用科目以产品配置为准")}</p>
+        <p className={`poster-subtitle ${editable ? "price-editable" : ""}`} contentEditable={editable} suppressContentEditableWarning onKeyDown={finishOnEnter} onBlur={(event) => commitText(subjectScopeField, subjectScopeLabel, event)}>{subjectScopeLabel}</p>
       </header>
       <section className="table-card">
         {isWenZong ? <div className="price-table wenzong-price-table">
