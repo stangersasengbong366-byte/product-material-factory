@@ -34,6 +34,23 @@ export async function parseCourseWorkbook(file, type) {
       throw new Error("赠课底表中没有可读取的科目课程");
     return parsed;
   }
+  if (type === "live") {
+    const liveRows = workbook.SheetNames.flatMap((sheetName) =>
+      readLiveSheetRows(XLSX, workbook.Sheets[sheetName], sheetName),
+    );
+    if (!liveRows.length) {
+      throw new Error(
+        "未找到学法直播表头，请确认底表包含年级、季度、上课日期和课程大纲列",
+      );
+    }
+    const parsed = parseLive(liveRows);
+    if (!parsed.summary.lessonRows) {
+      throw new Error(
+        "没有识别到有效课表，请检查年级、季度、日期及课程大纲是否已填写",
+      );
+    }
+    return parsed;
+  }
   const rows = workbook.SheetNames.flatMap((sheetName) => {
     const sheetRows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {
       defval: "",
@@ -42,18 +59,61 @@ export async function parseCourseWorkbook(file, type) {
     return sheetRows.map((row) => ({ ...row, __sheet: sheetName }));
   });
   if (!rows.length) throw new Error("表格中没有可读取的数据行");
-  if (type === "live") return parseLive(rows);
   if (type === "video") return parseVideo(rows);
   return parseGifts(rows, cleanGiftWorkbookName(file.name));
+}
+
+function readLiveSheetRows(XLSX, sheet, sheetName) {
+  const matrix = XLSX.utils.sheet_to_json(sheet, {
+    defval: "",
+    raw: false,
+    header: 1,
+    blankrows: false,
+  });
+  const headerIndex = matrix.findIndex((values) => {
+    const headers = values.map(normalizeColumnName);
+    return (
+      headers.includes(normalizeColumnName("年级")) &&
+      headers.includes(normalizeColumnName("季度")) &&
+      headers.some((header) => header.includes("上课日期")) &&
+      headers.some((header) =>
+        ["课程大纲", "课程内容", "课程名称", "直播主题"].some((name) =>
+          header.includes(normalizeColumnName(name)),
+        ),
+      )
+    );
+  });
+  if (headerIndex < 0) return [];
+  const headers = matrix[headerIndex].map((value, index) =>
+    String(value || `未命名列${index + 1}`).trim(),
+  );
+  return matrix.slice(headerIndex + 1).map((values, index) => {
+    const row = { __sheet: sheetName, __sourceRow: headerIndex + index + 2 };
+    headers.forEach((header, columnIndex) => {
+      row[header] = values[columnIndex] ?? "";
+    });
+    return row;
+  });
 }
 
 function parseLive(rows) {
   const library = {};
   let ignoredRows = 0;
+  const sheetContext = new Map();
   rows.forEach((row) => {
+    const sheetName = String(row.__sheet || "");
+    const context = sheetContext.get(sheetName) || { grade: "", quarter: "" };
     const subject = resolveSubject(row);
-    const grade = normalizeGrade(pickExact(row, "年级"));
-    const quarter = normalizeQuarter(pickExact(row, "季度"));
+    const explicitGrade = normalizeGrade(pickExact(row, "年级"));
+    const explicitQuarter = normalizeQuarter(pickExact(row, "季度"));
+    if (explicitGrade && explicitGrade !== context.grade) {
+      context.grade = explicitGrade;
+      context.quarter = "";
+    }
+    if (explicitQuarter) context.quarter = explicitQuarter;
+    sheetContext.set(sheetName, context);
+    const grade = explicitGrade || context.grade;
+    const quarter = explicitQuarter || context.quarter;
     const title =
       pickExact(row, "课程大纲") ||
       pick(row, ["课程内容", "课程名称", "课题", "标题", "直播主题"]);
@@ -71,6 +131,9 @@ function parseLive(rows) {
       ]),
     );
     LIVE_BATCHES.forEach((batch) => {
+      const current = rawBatch[batch];
+      if (!hasScheduleValue(current.date) && !hasScheduleValue(current.time))
+        return;
       const resolved = resolveBatchSchedule(batch, rawBatch, new Set());
       const list = ((((library[grade] ||= {})[subject] ||= {})[quarter] ||= {})[
         batch
@@ -133,6 +196,11 @@ function cleanScheduleValue(value) {
   return !label || label === "/" || resolveBatchReference(label) ? "" : label;
 }
 
+function hasScheduleValue(value) {
+  const label = String(value || "").trim();
+  return Boolean(label && label !== "/");
+}
+
 function summarizeLiveLibrary(library) {
   const cells = [];
   Object.entries(library).forEach(([grade, subjects]) =>
@@ -154,6 +222,9 @@ function summarizeLiveLibrary(library) {
     grades: [...new Set(cells.map((item) => item.grade))],
     subjects: [...new Set(cells.map((item) => item.subject))],
     quarters: [...new Set(cells.map((item) => item.quarter))],
+    missingSubjects: SUBJECTS.filter(
+      (subject) => !cells.some((item) => item.subject === subject),
+    ),
     cells,
     lessonRows: cells.reduce((sum, item) => sum + item.lessons, 0),
   };
@@ -403,16 +474,21 @@ function resolveTrack(value) {
   if (/目标/.test(label)) return "目标班";
   return "不分班";
 }
+function normalizeColumnName(value) {
+  return String(value || "")
+    .replace(/\s+/g, "")
+    .replace(/[－—–_\-]/g, "");
+}
 function pickExact(row, name) {
   const key = Object.keys(row).find(
-    (item) => String(item).replace(/\s+/g, "") === name,
+    (item) => normalizeColumnName(item) === normalizeColumnName(name),
   );
   return key && row[key] !== "" ? String(row[key]).trim() : "";
 }
 function pick(row, names) {
   for (const name of names) {
     const key = Object.keys(row).find((item) =>
-      String(item).replace(/\s+/g, "").includes(name),
+      normalizeColumnName(item).includes(normalizeColumnName(name)),
     );
     if (key && row[key] !== "") return String(row[key]).trim();
   }
