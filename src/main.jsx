@@ -2126,6 +2126,7 @@ const VideoPoster = React.forwardRef(function VideoPoster(
                   />
                   <strong>
                     <PosterEditable
+                      className="video-row-title"
                       editable={editable}
                       value={row.title}
                       onCommit={(value) => updateRow(index, "title", value)}
@@ -2473,6 +2474,13 @@ async function renderPosterWith(html2canvas, element) {
   ].join(";");
   const clone = element.cloneNode(true);
   clone.classList.add("is-exporting");
+  // html2canvas can mis-measure CJK punctuation inside an inline/flex span and
+  // paint suffixes such as “（一）” far away from the preceding course title.
+  // Export the row title as one plain text run while keeping the live span for
+  // master editing.
+  clone.querySelectorAll(".video-row-title").forEach((title) => {
+    title.replaceWith(document.createTextNode(title.textContent || ""));
+  });
   clone.style.setProperty("width", `${width}px`);
   clone.style.setProperty("height", `${height}px`);
   clone.style.setProperty("min-height", "0");
