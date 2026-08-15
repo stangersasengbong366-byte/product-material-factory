@@ -39,6 +39,7 @@ import {
   VIDEO_QUARTERS,
 } from "./courseRules";
 import { getTaskFilename, sanitizeFilenamePart } from "./exportNaming";
+import { toChineseNumeral } from "./chineseNumerals";
 import "./styles.css";
 import "./config.css";
 import "./figma-templates.css";
@@ -2102,7 +2103,7 @@ const VideoPoster = React.forwardRef(function VideoPoster(
             >
               <div className="outline-module-title">
                 <strong>
-                  {toChineseSection(groupIndex + 1)}、
+                  {toChineseNumeral(groupIndex + 1)}、
                   <PosterEditable
                     editable={editable}
                     value={group.module}
@@ -2203,10 +2204,6 @@ function groupVideoOutlineRows(rows) {
 function isCourseLayered(row) {
   const layer = String(row?.layer || "").trim();
   return Boolean(layer) && layer !== "通用" && layer !== "否";
-}
-function toChineseSection(value) {
-  const labels = ["一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
-  return labels[value - 1] || value;
 }
 const GiftPoster = React.forwardRef(function GiftPoster(
   { product, subject, rows, editable = false, override = {}, onChange },
