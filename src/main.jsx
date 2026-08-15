@@ -33,6 +33,10 @@ import {
   saveCloudStudio,
 } from "./cloudRepository";
 import { parseCourseWorkbook } from "./workbookParser";
+import {
+  expectedVideoLessonCount,
+  VIDEO_QUARTERS,
+} from "./courseRules";
 import "./styles.css";
 import "./config.css";
 import "./figma-templates.css";
@@ -1244,9 +1248,9 @@ function LiveImportChecks({ summary, ignored }) {
 
 function VideoAssociationSummary({ draft }) {
   const summary = draft.videoImportSummary;
-  const annualOutlineQuarters = ["秋季", "春季"];
-  const activeQuarters = draft.coverageQuarters.filter(
-    (quarter) => quarter === "春季" || quarter === "秋季",
+  const annualOutlineQuarters = VIDEO_QUARTERS;
+  const activeQuarters = draft.coverageQuarters.filter((quarter) =>
+    VIDEO_QUARTERS.includes(quarter),
   );
   const outlineQuarters = annualOutlineQuarters.filter((quarter) =>
     activeQuarters.includes(quarter),
@@ -1310,7 +1314,7 @@ function VideoAssociationSummary({ draft }) {
         task.subject,
         task.track,
       ).length,
-      expected: ["历史", "地理", "政治"].includes(task.subject) ? 20 : 40,
+      expected: expectedVideoLessonCount(task.subject, quarter),
     })),
   );
   const issues = counts.filter((item) => item.count !== item.expected);
@@ -1330,8 +1334,8 @@ function VideoAssociationSummary({ draft }) {
       {!subjects.length || !outlineQuarters.length ? (
         <div className="live-empty">
           {!subjects.length
-            ? "上传知识视频全年底表后，这里会按年级、科目、春秋阶段和大纲差异自动生成版本。"
-            : "当前产品未覆盖秋季或春季，因此无需映射知识视频。"}
+            ? "上传知识视频全年底表后，这里会按年级、科目、课程阶段和大纲差异自动生成版本。"
+            : "当前产品未选择知识视频课程阶段。"}
         </div>
       ) : (
         <>

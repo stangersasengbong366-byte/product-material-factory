@@ -98,3 +98,58 @@ test("解析按科目 Sheet、合并年级季度和多期日期列", async () =>
     "【数学】暑期第一讲",
   );
 });
+
+function makeVideoFile() {
+  const workbook = XLSX.utils.book_new();
+  const header = [
+    "模块",
+    "视频大纲",
+    "夏/秋/冬/春",
+    "是否分层",
+    "（1星/2星/3星/4星）",
+  ];
+  XLSX.utils.book_append_sheet(
+    workbook,
+    XLSX.utils.aoa_to_sheet([
+      header,
+      ["阅读", "语文秋季课程", "秋季（一轮）", "否", "2星"],
+      ["阅读", "语文寒假课程", "寒假（二轮）", "否", "3星"],
+    ]),
+    "高一语文",
+  );
+  XLSX.utils.book_append_sheet(
+    workbook,
+    XLSX.utils.aoa_to_sheet([
+      header,
+      ["遗传", "生物寒假课程", "冬季", "否", "2星"],
+    ]),
+    "高一生物",
+  );
+  const buffer = XLSX.write(workbook, { type: "array", bookType: "xlsx" });
+  return {
+    name: "知识视频底表.xlsx",
+    async arrayBuffer() {
+      return buffer;
+    },
+  };
+}
+
+test("知识视频将寒假和冬季保留为独立课程阶段", async () => {
+  const parsed = await parseCourseWorkbook(makeVideoFile(), "video");
+
+  assert.equal(
+    parsed.library.高一.语文.寒假.ordered[0].title,
+    "语文寒假课程",
+  );
+  assert.equal(
+    parsed.library.高一.生物.寒假.ordered[0].title,
+    "生物寒假课程",
+  );
+  assert.equal(parsed.library.高一.语文.春季, undefined);
+  assert.equal(
+    parsed.summary.cells.find(
+      (item) => item.subject === "语文" && item.quarter === "寒假",
+    ).expected,
+    20,
+  );
+});

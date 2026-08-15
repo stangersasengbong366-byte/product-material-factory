@@ -1,3 +1,5 @@
+import { expectedVideoLessonCount } from "./courseRules.js";
+
 const SUBJECTS = [
   "语文",
   "数学",
@@ -253,7 +255,7 @@ function parseVideo(rows) {
         pickExact(row, "视频大纲") ||
         pick(row, ["知识视频标题", "课程内容", "课程名称", "课题", "标题"]);
       const rawStage = pick(row, ["夏/秋/冬/春", "季度", "阶段", "轮次"]);
-      const quarter = normalizeVideoQuarter(rawStage, subject);
+      const quarter = normalizeVideoQuarter(rawStage);
       if (!title || !quarter || /赠课/.test(rawStage)) {
         ignoredRows += 1;
         return;
@@ -303,7 +305,10 @@ function parseVideo(rows) {
     (item) => `${item.grade}|${item.subject}|${item.quarter}`,
   );
   Object.values(candidateGroups).forEach((options) => {
-    const expected = isHumanities(options[0].subject) ? 20 : 40;
+    const expected = expectedVideoLessonCount(
+      options[0].subject,
+      options[0].quarter,
+    );
     const selected = [...options].sort(
       (a, b) =>
         Math.abs(resolvedVideoCount(a.items) - expected) -
@@ -333,14 +338,14 @@ function parseVideo(rows) {
   };
 }
 
-function normalizeVideoQuarter(value, subject) {
+function normalizeVideoQuarter(value) {
   const label = String(value || "").replace(/\s+/g, "");
-  if (/一轮/.test(label)) return "秋季";
-  if (/二轮/.test(label)) return "春季";
+  if (/寒假|冬季|寒|冬/.test(label)) return "寒假";
+  if (/暑假|暑期|夏季|暑|夏/.test(label)) return "暑期";
   if (/秋/.test(label)) return "秋季";
   if (/春/.test(label)) return "春季";
-  if (isHumanities(subject) && /暑|夏/.test(label)) return "秋季";
-  if (isHumanities(subject) && /寒|冬/.test(label)) return "春季";
+  if (/一轮/.test(label)) return "秋季";
+  if (/二轮/.test(label)) return "春季";
   return "";
 }
 
