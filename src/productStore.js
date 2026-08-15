@@ -266,32 +266,31 @@ export function getVideoRows(
   const resolvedTrack = track === "通用版" ? "目标班" : track;
   if (!subjectLibrary) return product?.video?.[subject]?.[resolvedTrack] || [];
   const bucket = resolvedTrack === "精英班" ? "elite" : "target";
-  return (product.coverageQuarters || [])
-    .filter((quarter) => quarter === "秋季" || quarter === "春季")
-    .flatMap((quarter) => {
-      const stage = subjectLibrary[quarter];
-      if (!stage) return [];
-      const allowedBuckets = new Set(["common", "layered", bucket]);
-      const orderedRows = Array.isArray(stage.ordered)
-        ? stage.ordered
-        : [
-            ...(stage.common || []),
-            ...(stage.layered || []),
-            ...(stage[bucket] || []),
-          ].sort(
-            (left, right) =>
-              Number(left.sourceOrder ?? Number.MAX_SAFE_INTEGER) -
-              Number(right.sourceOrder ?? Number.MAX_SAFE_INTEGER),
-          );
-      return orderedRows
-        .filter((row) => allowedBuckets.has(row.bucket))
-        .map((row, index) => ({
-          ...row,
-          no: row.no ?? index + 1,
-          quarter,
-          track,
-        }));
-    });
+  const rows = (product.coverageQuarters || []).flatMap((quarter) => {
+    const stage = subjectLibrary[quarter];
+    if (!stage) return [];
+    const allowedBuckets = new Set(["common", "layered", bucket]);
+    const orderedRows = Array.isArray(stage.ordered)
+      ? stage.ordered
+      : [
+          ...(stage.common || []),
+          ...(stage.layered || []),
+          ...(stage[bucket] || []),
+        ].sort(
+          (left, right) =>
+            Number(left.sourceOrder ?? Number.MAX_SAFE_INTEGER) -
+            Number(right.sourceOrder ?? Number.MAX_SAFE_INTEGER),
+        );
+    return orderedRows
+      .filter((row) => allowedBuckets.has(row.bucket))
+      .map((row) => ({
+        ...row,
+        sourceNo: row.no,
+        quarter,
+        track,
+      }));
+  });
+  return rows.map((row, index) => ({ ...row, no: index + 1 }));
 }
 
 function sameVideoOutline(left, right) {
