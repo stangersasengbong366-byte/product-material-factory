@@ -63,6 +63,8 @@ const taskNavItems = [
 const assetUrl = (path) =>
   `${import.meta.env.BASE_URL}${String(path).replace(/^\/+/, "")}`;
 
+const videoPageKey = (subject, track) => `${subject}::${track}`;
+
 function annualLibraryFromProduct(product = {}) {
   return normalizeAnnualLibrary({
     uploadNames: {
@@ -469,6 +471,8 @@ function TaskWorkspace({
   const [giftSaving, setGiftSaving] = useState(false);
   const [priceEditing, setPriceEditing] = useState(false);
   const [priceSaving, setPriceSaving] = useState(false);
+  const [videoEditing, setVideoEditing] = useState(false);
+  const [videoSaving, setVideoSaving] = useState(false);
   const typeStats = Object.fromEntries(
     ["学法直播", "知识视频", "赠课", "价格"].map((type) => [
       type,
@@ -486,6 +490,7 @@ function TaskWorkspace({
   useEffect(() => {
     setGiftEditing(false);
     setPriceEditing(false);
+    setVideoEditing(false);
   }, [activeTaskId, product.id]);
   const updateGiftCopy = (patch) => {
     if (activeTask?.type !== "赠课") return;
@@ -524,6 +529,33 @@ function TaskWorkspace({
     setPriceSaving(true);
     try { await onSaveCloud(); }
     finally { setPriceSaving(false); }
+  };
+  const updateVideoCopy = ({ scope, patch }) => {
+    if (activeTask?.type !== "知识视频") return;
+    const current = product.videoTemplateOverride || {};
+    if (scope === "template") {
+      onUpdateProduct({
+        ...product,
+        videoTemplateOverride: { ...current, ...patch },
+      });
+      return;
+    }
+    const key = videoPageKey(activeTask.subject, activeTask.track);
+    onUpdateProduct({
+      ...product,
+      videoTemplateOverride: {
+        ...current,
+        pages: {
+          ...(current.pages || {}),
+          [key]: { ...(current.pages?.[key] || {}), ...patch },
+        },
+      },
+    });
+  };
+  const saveVideoCopy = async () => {
+    setVideoSaving(true);
+    try { await onSaveCloud(); }
+    finally { setVideoSaving(false); }
   };
   return (
     <>
@@ -617,8 +649,8 @@ function TaskWorkspace({
           <div className="preview-toolbar">
             <div>
               <Eye size={17} />
-              <span>{activeTask?.type === "赠课" ? "赠课母版预览" : activeTask?.type === "价格" ? "价格母版预览" : "素材预览"}</span>
-              <em>{activeTask?.type === "赠课" ? "自动同步全部学科" : activeTask?.type === "价格" ? "自动同步全部价格素材" : product.name}</em>
+              <span>{activeTask?.type === "赠课" ? "赠课母版预览" : activeTask?.type === "价格" ? "价格母版预览" : activeTask?.type === "知识视频" ? "知识视频母版预览" : "素材预览"}</span>
+              <em>{activeTask?.type === "赠课" ? "自动同步全部学科" : activeTask?.type === "价格" ? "自动同步全部价格素材" : activeTask?.type === "知识视频" ? "顶部母版同步，课程内容按当前素材保存" : product.name}</em>
             </div>
             <div className="preview-actions">
             {activeTask?.type === "赠课" ? (
@@ -639,6 +671,17 @@ function TaskWorkspace({
                 </button>
                 <button onClick={savePriceCopy} disabled={priceSaving}>
                   {priceSaving ? <LoaderCircle className="spin" size={16} /> : <Save size={16} />}
+                  保存云端
+                </button>
+              </>
+            ) : null}
+            {activeTask?.type === "知识视频" ? (
+              <>
+                <button className={videoEditing ? "active" : ""} onClick={() => setVideoEditing((value) => !value)}>
+                  {videoEditing ? "完成编辑" : "编辑母版"}
+                </button>
+                <button onClick={saveVideoCopy} disabled={videoSaving}>
+                  {videoSaving ? <LoaderCircle className="spin" size={16} /> : <Save size={16} />}
                   保存云端
                 </button>
               </>
@@ -668,6 +711,8 @@ function TaskWorkspace({
                   onGiftCopyChange: updateGiftCopy,
                   priceEditing,
                   onPriceCopyChange: updatePriceCopy,
+                  videoEditing,
+                  onVideoCopyChange: updateVideoCopy,
                 })
               ) : (
                 <div className="empty-state">
@@ -1565,6 +1610,9 @@ function renderTaskPoster(task, product, rows, ref, options = {}) {
         subject={task.subject}
         track={task.track}
         rows={rows}
+        editable={options.videoEditing}
+        override={product.videoTemplateOverride || {}}
+        onChange={options.onVideoCopyChange}
       />
     );
   return (
@@ -1798,13 +1846,99 @@ function formatStageTimes(rows) {
   return times[0] || "以实际排课为准";
 }
 const VideoPoster = React.forwardRef(function VideoPoster(
-  { product, subject, track, rows },
+  {
+    product,
+    subject,
+    track,
+    rows,
+    editable = false,
+    override = {},
+    onChange,
+  },
   ref,
 ) {
   const gradeTheme = gradeThemeKey(product.grade);
   const gradeAsset =
     product.grade === "高二" ? "g2" : product.grade === "高三" ? "g3" : "g1";
-  const outlineGroups = groupVideoOutlineRows(rows);
+  const pageOverride = override.pages?.[videoPageKey(subject, track)] || {};
+  const displayRows = rows.map((row, index) => ({
+    ...row,
+    ...(pageOverride.rows?.[index] || {}),
+  }));
+  const outlineGroups = groupVideoOutlineRows(displayRows);
+  const defaultBenefits = [
+    {
+      icon: "书",
+      title: "透彻全面",
+      detail:
+        "涵盖各学期完整的知识体系，知识点按难度分为星级，清晰梳理每个模块的知识点",
+    },
+    {
+      icon: "靶",
+      title: "七轮打磨",
+      detail:
+        "清北主理人七轮打磨的课程，国家正规ISBN版号，多轮审核校定稿，内容质量有保障",
+    },
+    {
+      icon: "▶",
+      title: "灵活选择",
+      detail: "30分钟一节，可根据孩子薄弱模块、学校进度、时间来学习",
+    },
+  ];
+  const benefits = defaultBenefits.map((item, index) => ({
+    ...item,
+    ...(override.benefits?.[index] || {}),
+  }));
+  const copy = {
+    titleGrade: override.titleGrade || product.grade,
+    titleProduct:
+      override.titleProduct || product.name.replace(product.grade, ""),
+    knowledgeLabel: override.knowledgeLabel || "知识视频",
+    headline:
+      override.headline ||
+      "清北主理人 精心录制视频，30分钟一节课 讲透一个知识点",
+    outlineTitle: override.outlineTitle || "课程大纲",
+    levelBasic: override.levelBasic || "基础巩固",
+    levelAbility: override.levelAbility || "能力提升",
+    levelAdvanced: override.levelAdvanced || "拓展拔高",
+    difficultyEasy: override.difficultyEasy || "简单",
+    difficultyMedium: override.difficultyMedium || "中等",
+    difficultyHard: override.difficultyHard || "困难",
+    headerNo: override.headerNo || "序号",
+    headerTitle: override.headerTitle || "视频大纲",
+    headerDifficulty: override.headerDifficulty || "难度星级",
+    layerBadge: override.layerBadge || "课程分层",
+    adviceTitle: override.adviceTitle || "学习建议",
+    adviceLines: override.adviceLines || [
+      "·“课程分层”指的是：本节课程难度适配购买对应班型",
+      "·可根据学校进度或自身薄弱点，选择对应模块进行学习。",
+    ],
+    footer: override.footer || "❧　系统学　练得透　考得好　❧",
+  };
+  const updateTemplate = (patch) =>
+    onChange?.({ scope: "template", patch });
+  const updatePage = (patch) => onChange?.({ scope: "page", patch });
+  const editableRows = () =>
+    displayRows.map((row, index) => ({
+      no: String(row.no ?? index + 1),
+      title: String(row.title || "未命名知识视频"),
+      module: String(row.module || "其他模块"),
+      scoreShare: String(row.scoreShare || ""),
+      difficulty: String(row.difficulty || "1星"),
+      layer: String(row.layer || "通用"),
+    }));
+  const updateRow = (index, field, value) => {
+    const nextRows = editableRows();
+    nextRows[index] = { ...nextRows[index], [field]: value };
+    updatePage({ rows: nextRows });
+  };
+  const updateGroup = (items, field, value) => {
+    const nextRows = editableRows();
+    items.forEach(({ index }) => {
+      nextRows[index] = { ...nextRows[index], [field]: value };
+    });
+    updatePage({ rows: nextRows });
+  };
   return (
     <article ref={ref} className={`figma-poster figma-video ${gradeTheme}`}>
       <img
@@ -1823,46 +1957,87 @@ const VideoPoster = React.forwardRef(function VideoPoster(
             : assetUrl(`figma-assets/video-bg-${gradeAsset}.png`)
         }
       />
-      <div className="figma-video-subject">{subject}</div>
+      <PosterEditable
+        as="div"
+        className="figma-video-subject"
+        editable={editable}
+        value={pageOverride.subject || subject}
+        onCommit={(value) => updatePage({ subject: value })}
+      />
       <header>
         <h2>
-          <em>{product.grade}</em>
-          {product.name.replace(product.grade, "")}
+          <PosterEditable
+            as="em"
+            editable={editable}
+            value={copy.titleGrade}
+            onCommit={(value) => updateTemplate({ titleGrade: value })}
+          />
+          <PosterEditable
+            editable={editable}
+            value={copy.titleProduct}
+            onCommit={(value) => updateTemplate({ titleProduct: value })}
+          />
         </h2>
-        <strong>{track}｜知识视频</strong>
-        <p>清北主理人 精心录制视频，30分钟一节课 讲透一个知识点</p>
+        <strong>
+          <PosterEditable
+            editable={editable}
+            value={pageOverride.track || track}
+            onCommit={(value) => updatePage({ track: value })}
+          />
+          ｜
+          <PosterEditable
+            editable={editable}
+            value={copy.knowledgeLabel}
+            onCommit={(value) => updateTemplate({ knowledgeLabel: value })}
+          />
+        </strong>
+        <PosterEditable
+          as="p"
+          editable={editable}
+          value={copy.headline}
+          onCommit={(value) => updateTemplate({ headline: value })}
+        />
       </header>
       <section className="figma-video-benefits">
-        <Benefit icon="书" title="透彻全面">
-          涵盖各学期完整的知识体系，知识点按难度分为星级，清晰梳理每个模块的知识点
-        </Benefit>
-        <Benefit icon="靶" title="七轮打磨">
-          清北主理人七轮打磨的课程，国家正规ISBN版号，多轮审核校定稿，内容质量有保障
-        </Benefit>
-        <Benefit icon="▶" title="灵活选择">
-          30分钟一节，可根据孩子薄弱模块、学校进度、时间来学习
-        </Benefit>
+        {benefits.map((benefit, index) => (
+          <Benefit
+            key={index}
+            {...benefit}
+            editable={editable}
+            onChange={(patch) => {
+              const nextBenefits = benefits.map((item, itemIndex) =>
+                itemIndex === index ? { ...item, ...patch } : item,
+              );
+              updateTemplate({ benefits: nextBenefits });
+            }}
+          />
+        ))}
       </section>
       <section className="figma-video-outline">
         <div className="outline-top">
-          <b>课程大纲</b>
+          <PosterEditable
+            as="b"
+            editable={editable}
+            value={copy.outlineTitle}
+            onCommit={(value) => updateTemplate({ outlineTitle: value })}
+          />
           <div className="outline-legends">
             <p>
-              <b><i />基础巩固</b>
-              <b><i />能力提升</b>
-              <b><i />拓展拔高</b>
+              <b><i /><PosterEditable editable={editable} value={copy.levelBasic} onCommit={(value) => updateTemplate({ levelBasic: value })} /></b>
+              <b><i /><PosterEditable editable={editable} value={copy.levelAbility} onCommit={(value) => updateTemplate({ levelAbility: value })} /></b>
+              <b><i /><PosterEditable editable={editable} value={copy.levelAdvanced} onCommit={(value) => updateTemplate({ levelAdvanced: value })} /></b>
             </p>
             <p>
-              <b><span>★☆☆☆</span>简单</b>
-              <b><span>★★☆☆</span>中等</b>
-              <b><span>★★★★</span>困难</b>
+              <b><span>★☆☆☆</span><PosterEditable editable={editable} value={copy.difficultyEasy} onCommit={(value) => updateTemplate({ difficultyEasy: value })} /></b>
+              <b><span>★★☆☆</span><PosterEditable editable={editable} value={copy.difficultyMedium} onCommit={(value) => updateTemplate({ difficultyMedium: value })} /></b>
+              <b><span>★★★★</span><PosterEditable editable={editable} value={copy.difficultyHard} onCommit={(value) => updateTemplate({ difficultyHard: value })} /></b>
             </p>
           </div>
         </div>
         <div className="outline-head">
-          <span>序号</span>
-          <span>视频大纲</span>
-          <span>难度星级</span>
+          <PosterEditable editable={editable} value={copy.headerNo} onCommit={(value) => updateTemplate({ headerNo: value })} />
+          <PosterEditable editable={editable} value={copy.headerTitle} onCommit={(value) => updateTemplate({ headerTitle: value })} />
+          <PosterEditable editable={editable} value={copy.headerDifficulty} onCommit={(value) => updateTemplate({ headerDifficulty: value })} />
         </div>
         <div className="outline-rows">
           {outlineGroups.map((group, groupIndex) => (
@@ -1872,20 +2047,48 @@ const VideoPoster = React.forwardRef(function VideoPoster(
             >
               <div className="outline-module-title">
                 <strong>
-                  {toChineseSection(groupIndex + 1)}、{group.module}
+                  {toChineseSection(groupIndex + 1)}、
+                  <PosterEditable
+                    editable={editable}
+                    value={group.module}
+                    onCommit={(value) => updateGroup(group.items, "module", value)}
+                  />
                 </strong>
-                <b>{group.scoreShare || "—"}</b>
+                <PosterEditable
+                  as="b"
+                  editable={editable}
+                  value={group.scoreShare || "—"}
+                  onCommit={(value) => updateGroup(group.items, "scoreShare", value === "—" ? "" : value)}
+                />
               </div>
               {group.items.map(({ row, index }) => (
                 <p key={row.id ?? `${row.no ?? index}-${index}`}>
-                  <span>{row.no ?? index + 1}</span>
+                  <PosterEditable
+                    editable={editable}
+                    value={String(row.no ?? index + 1)}
+                    onCommit={(value) => updateRow(index, "no", value)}
+                  />
                   <strong>
-                    <span>{row.title}</span>
+                    <PosterEditable
+                      editable={editable}
+                      value={row.title}
+                      onCommit={(value) => updateRow(index, "title", value)}
+                    />
                     {isCourseLayered(row) ? (
-                      <em className="course-layer-badge">课程分层</em>
+                      <PosterEditable
+                        as="em"
+                        className="course-layer-badge"
+                        editable={editable}
+                        value={copy.layerBadge}
+                        onCommit={(value) => updateTemplate({ layerBadge: value })}
+                      />
                     ) : null}
                   </strong>
-                  <span>{"★".repeat(normalizeDifficulty(row.difficulty))}</span>
+                  <PosterEditable
+                    editable={editable}
+                    value={"★".repeat(normalizeDifficulty(row.difficulty))}
+                    onCommit={(value) => updateRow(index, "difficulty", value)}
+                  />
                 </p>
               ))}
             </section>
@@ -1894,15 +2097,36 @@ const VideoPoster = React.forwardRef(function VideoPoster(
         <div className="learning-advice">
           <b>
             <i>☰</i>
-            <strong>学习建议</strong>
+            <PosterEditable
+              as="strong"
+              editable={editable}
+              value={copy.adviceTitle}
+              onCommit={(value) => updateTemplate({ adviceTitle: value })}
+            />
           </b>
           <span>
-            <p>·“课程分层”指的是：本节课程难度适配购买对应班型</p>
-            <p>·可根据学校进度或自身薄弱点，选择对应模块进行学习。</p>
+            {copy.adviceLines.map((line, index) => (
+              <PosterEditable
+                as="p"
+                key={index}
+                editable={editable}
+                value={line}
+                onCommit={(value) => {
+                  const nextLines = [...copy.adviceLines];
+                  nextLines[index] = value;
+                  updateTemplate({ adviceLines: nextLines });
+                }}
+              />
+            ))}
           </span>
         </div>
       </section>
-      <footer>❧　系统学　练得透　考得好　❧</footer>
+      <PosterEditable
+        as="footer"
+        editable={editable}
+        value={copy.footer}
+        onCommit={(value) => updateTemplate({ footer: value })}
+      />
     </article>
   );
 });
@@ -2079,13 +2303,57 @@ function toChineseLesson(value) {
   ];
   return labels[value - 1] || value;
 }
-function Benefit({ icon, title, children }) {
+function PosterEditable({
+  as: Tag = "span",
+  className = "",
+  editable = false,
+  value,
+  onCommit,
+}) {
+  const finishOnEnter = (event) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    event.currentTarget.blur();
+  };
+  const commit = (event) => {
+    const next = event.currentTarget.textContent.trim();
+    if (next) onCommit?.(next);
+    else event.currentTarget.textContent = String(value ?? "");
+  };
+  return (
+    <Tag
+      className={`${className} ${editable ? "video-editable" : ""}`.trim()}
+      contentEditable={editable}
+      suppressContentEditableWarning
+      onKeyDown={finishOnEnter}
+      onBlur={commit}
+    >
+      {value}
+    </Tag>
+  );
+}
+
+function Benefit({ icon, title, detail, editable = false, onChange }) {
   return (
     <div>
-      <i>{icon}</i>
+      <PosterEditable
+        as="i"
+        editable={editable}
+        value={icon}
+        onCommit={(value) => onChange?.({ icon: value })}
+      />
       <p>
-        <strong>{title}</strong>
-        <span>{children}</span>
+        <PosterEditable
+          as="strong"
+          editable={editable}
+          value={title}
+          onCommit={(value) => onChange?.({ title: value })}
+        />
+        <PosterEditable
+          editable={editable}
+          value={detail}
+          onCommit={(value) => onChange?.({ detail: value })}
+        />
       </p>
     </div>
   );
@@ -2103,7 +2371,9 @@ function pageTitle(page) {
   ];
 }
 function normalizeDifficulty(value) {
-  const n = Number(String(value ?? 1).match(/\d+/)?.[0] ?? 1);
+  const text = String(value ?? 1);
+  const starCount = (text.match(/★/g) || []).length;
+  const n = starCount || Number(text.match(/\d+/)?.[0] ?? 1);
   return Math.min(5, Math.max(1, n));
 }
 function countParsed(data, type) {

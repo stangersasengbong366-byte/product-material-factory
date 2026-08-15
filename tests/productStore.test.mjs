@@ -88,3 +88,67 @@ test("学法直播全年库缺科时仍展示生物待补充任务", () => {
     count: 0,
   });
 });
+
+test("精英班旧数据统一展示为菁英班并保留知识视频母版修改", () => {
+  const product = normalizeProduct({
+    id: "elite-video",
+    name: "高一秋冬衔接卡",
+    grade: "高一",
+    stage: "秋冬衔接卡",
+    coverageQuarters: ["秋季"],
+    videoTrack: "精英班",
+    videoLibrary: {
+      高一: {
+        数学: {
+          秋季: {
+            common: [],
+            target: [],
+            elite: [
+              {
+                title: "集合进阶",
+                module: "集合",
+                difficulty: "3星",
+                bucket: "elite",
+              },
+            ],
+            layered: [],
+          },
+        },
+      },
+    },
+    videoTemplateOverride: {
+      headline: "可修改的知识视频宣传语",
+      pages: {
+        "数学::精英班": {
+          track: "精英班",
+          rows: [
+            {
+              no: 1,
+              title: "修改后的课程",
+              module: "修改后的模块",
+              scoreShare: "约10分",
+              difficulty: "★★★★",
+              layer: "菁英班",
+            },
+          ],
+        },
+      },
+    },
+    priceConfig: { enabled: false },
+  });
+
+  const videoTasks = buildMaterialTasks(product).filter(
+    (task) => task.type === "知识视频",
+  );
+  assert.equal(product.videoTrack, "菁英班");
+  assert.equal(videoTasks[0].track, "菁英班");
+  assert.equal(product.videoTemplateOverride.headline, "可修改的知识视频宣传语");
+  assert.equal(
+    product.videoTemplateOverride.pages["数学::菁英班"].track,
+    "菁英班",
+  );
+  assert.equal(
+    product.videoTemplateOverride.pages["数学::菁英班"].rows[0].title,
+    "修改后的课程",
+  );
+});

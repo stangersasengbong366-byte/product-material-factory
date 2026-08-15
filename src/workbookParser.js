@@ -324,7 +324,7 @@ function parseVideo(rows) {
               ? "分层内容"
               : bucket === "target"
                 ? "目标班"
-                : "精英班",
+                : "菁英班",
       };
       (stageRows[quarter] ||= []).push(item);
     });

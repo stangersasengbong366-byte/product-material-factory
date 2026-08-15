@@ -34,11 +34,14 @@ export function normalizeProduct(input) {
     liveImportSummary: input?.liveImportSummary || null,
     liveImportIgnoredRows: Number(input?.liveImportIgnoredRows || 0),
     live: normalizeLive(input?.live || input?.parsedCourseData?.live || {}),
-    videoTrack: String(input?.videoTrack || "目标班"),
+    videoTrack: normalizeVideoTrack(input?.videoTrack || "目标班"),
     videoLibrary: normalizeVideoLibrary(input?.videoLibrary || {}),
     videoImportSummary: input?.videoImportSummary || null,
     videoImportIgnoredRows: Number(input?.videoImportIgnoredRows || 0),
     video: normalizeVideo(input?.video || input?.parsedCourseData?.video || {}),
+    videoTemplateOverride: normalizeVideoTemplateOverride(
+      input?.videoTemplateOverride,
+    ),
     gifts: normalizeGifts(
       input?.gifts ||
         input?.giftCourses ||
@@ -81,6 +84,83 @@ function normalizeGiftCopyOverrides(value = {}) {
   );
 }
 
+function normalizeVideoTemplateOverride(value = {}) {
+  if (!value || typeof value !== "object") return {};
+  const textFields = [
+    "titleGrade",
+    "titleProduct",
+    "knowledgeLabel",
+    "headline",
+    "outlineTitle",
+    "levelBasic",
+    "levelAbility",
+    "levelAdvanced",
+    "difficultyEasy",
+    "difficultyMedium",
+    "difficultyHard",
+    "headerNo",
+    "headerTitle",
+    "headerDifficulty",
+    "layerBadge",
+    "adviceTitle",
+    "footer",
+  ];
+  const normalized = Object.fromEntries(
+    textFields
+      .filter((field) => value[field] != null)
+      .map((field) => [field, String(value[field])]),
+  );
+  if (Array.isArray(value.benefits)) {
+    normalized.benefits = value.benefits.slice(0, 3).map((benefit = {}) => ({
+      icon: String(benefit.icon || ""),
+      title: String(benefit.title || ""),
+      detail: String(benefit.detail || ""),
+    }));
+  }
+  if (Array.isArray(value.adviceLines)) {
+    normalized.adviceLines = value.adviceLines
+      .slice(0, 2)
+      .map((line) => String(line || ""));
+  }
+  if (value.pages && typeof value.pages === "object") {
+    normalized.pages = Object.fromEntries(
+      Object.entries(value.pages).map(([key, page = {}]) => {
+        const [subject, track] = String(key).split("::");
+        const normalizedKey = track
+          ? `${subject}::${normalizeVideoTrack(track)}`
+          : key;
+        return [normalizedKey, {
+          ...(page.subject != null ? { subject: String(page.subject) } : {}),
+          ...(page.track != null
+            ? { track: normalizeVideoTrack(page.track) }
+            : {}),
+          ...(Array.isArray(page.rows)
+            ? {
+                rows: page.rows.map((row = {}, index) => ({
+                  no: String(row.no ?? index + 1),
+                  title: String(row.title || "未命名知识视频"),
+                  module: String(row.module || "其他模块"),
+                  scoreShare: String(row.scoreShare || ""),
+                  difficulty: String(row.difficulty || "1星"),
+                  layer: String(row.layer || "通用"),
+                })),
+              }
+            : {}),
+        }];
+      }),
+    );
+  }
+  return normalized;
+}
+
+function normalizeVideoTrack(value) {
+  const label = String(value || "");
+  if (/菁英|精英|英才/.test(label)) return "菁英班";
+  if (/目标/.test(label)) return "目标班";
+  if (/通用/.test(label)) return "通用版";
+  return label || "通用版";
+}
+
 export function buildMaterialTasks(product) {
   const tasks = [];
   const annualLiveSubjects = Object.keys(
@@ -111,7 +191,7 @@ export function buildMaterialTasks(product) {
   if (videoLibrarySubjects.length)
     videoLibrarySubjects.forEach((subject) => {
       const targetRows = getVideoRows(product, subject, "目标班");
-      const eliteRows = getVideoRows(product, subject, "精英班");
+      const eliteRows = getVideoRows(product, subject, "菁英班");
       const needsTwoVersions =
         subject === "数学" || !sameVideoOutline(targetRows, eliteRows);
       if (needsTwoVersions) {
@@ -125,10 +205,10 @@ export function buildMaterialTasks(product) {
           });
         if (eliteRows.length)
           tasks.push({
-            id: slug(`${subject}-video-精英班`),
+            id: slug(`${subject}-video-菁英班`),
             subject,
             type: "知识视频",
-            track: "精英班",
+            track: "菁英班",
             count: eliteRows.length,
           });
       } else if (targetRows.length || eliteRows.length) {
@@ -263,9 +343,10 @@ export function getVideoRows(
   track = product?.videoTrack || "目标班",
 ) {
   const subjectLibrary = product?.videoLibrary?.[product.grade]?.[subject];
-  const resolvedTrack = track === "通用版" ? "目标班" : track;
+  const normalizedTrack = normalizeVideoTrack(track);
+  const resolvedTrack = normalizedTrack === "通用版" ? "目标班" : normalizedTrack;
   if (!subjectLibrary) return product?.video?.[subject]?.[resolvedTrack] || [];
-  const bucket = resolvedTrack === "精英班" ? "elite" : "target";
+  const bucket = resolvedTrack === "菁英班" ? "elite" : "target";
   const rows = (product.coverageQuarters || []).flatMap((quarter) => {
     const stage = subjectLibrary[quarter];
     if (!stage) return [];
@@ -287,7 +368,7 @@ export function getVideoRows(
         ...row,
         sourceNo: row.no,
         quarter,
-        track,
+        track: normalizedTrack,
       }));
   });
   return rows.map((row, index) => ({ ...row, no: index + 1 }));
@@ -366,7 +447,14 @@ function normalizeVideo(data) {
         (groups[track] ||= []).push(row);
       });
       result[subject] = groups;
-    } else result[subject] = value || {};
+    } else {
+      const groups = {};
+      Object.entries(value || {}).forEach(([track, rows]) => {
+        const normalizedTrack = normalizeVideoTrack(track);
+        (groups[normalizedTrack] ||= []).push(...(rows || []));
+      });
+      result[subject] = groups;
+    }
   });
   return result;
 }

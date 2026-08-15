@@ -32,6 +32,20 @@
   --video-border: #d9c2ff;
   --video-shadow: rgba(123, 63, 242, 0.12);
 }
+.figma-video .video-editable {
+  cursor: text;
+  outline: 2px dashed rgba(123, 63, 242, 0.62);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+.figma-video .video-editable:focus {
+  outline-style: solid;
+  background: rgba(255, 255, 255, 0.76);
+}
+.figma-video.is-exporting .video-editable {
+  outline: 0 !important;
+  background: transparent !important;
+}
 .figma-video header {
   padding: 112px 16px 0;
 }
