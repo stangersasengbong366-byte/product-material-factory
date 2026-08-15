@@ -1,14 +1,5 @@
-const SUBJECTS = [
-  "语文",
-  "数学",
-  "英语",
-  "物理",
-  "化学",
-  "生物",
-  "历史",
-  "地理",
-  "政治",
-];
+import { COURSE_SUBJECTS } from "./courseSubjects.js";
+
 const LIVE_BATCHES = ["早鸟期", "一期", "二期", "三期"];
 const VALID_GRADES = ["高一", "高二", "高三"];
 const VALID_QUARTERS = ["寒假", "春季", "暑期", "秋季"];
@@ -222,7 +213,7 @@ function summarizeLiveLibrary(library) {
     grades: [...new Set(cells.map((item) => item.grade))],
     subjects: [...new Set(cells.map((item) => item.subject))],
     quarters: [...new Set(cells.map((item) => item.quarter))],
-    missingSubjects: SUBJECTS.filter(
+    missingSubjects: COURSE_SUBJECTS.filter(
       (subject) => !cells.some((item) => item.subject === subject),
     ),
     cells,
@@ -451,12 +442,18 @@ function cleanGiftWorkbookName(filename) {
 }
 
 function resolveSubject(row) {
-  const explicit = String(pick(row, ["科目", "学科", "对应学科"]) || "");
+  const explicit = normalizeSubjectLabel(
+    pick(row, ["科目", "学科", "对应学科"]),
+  );
+  const sheetName = normalizeSubjectLabel(row.__sheet);
   return (
-    SUBJECTS.find((subject) => explicit.includes(subject)) ||
-    SUBJECTS.find((subject) => String(row.__sheet).includes(subject)) ||
+    COURSE_SUBJECTS.find((subject) => explicit.includes(subject)) ||
+    COURSE_SUBJECTS.find((subject) => sheetName.includes(subject)) ||
     ""
   );
+}
+function normalizeSubjectLabel(value) {
+  return String(value || "").replace(/[\s・·_－—–-]+/g, "");
 }
 function normalizeGrade(value) {
   return VALID_GRADES.find((grade) => String(value).includes(grade)) || "";

@@ -72,6 +72,7 @@ function makeFile() {
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, makeSheet("语文"), "语文");
   XLSX.utils.book_append_sheet(workbook, makeSheet("数学"), "数学课表");
+  XLSX.utils.book_append_sheet(workbook, makeSheet("生物"), "生 物－课表");
   const buffer = XLSX.write(workbook, { type: "array", bookType: "xlsx" });
   return {
     name: "学法直播底表.xlsx",
@@ -84,7 +85,7 @@ function makeFile() {
 test("解析按科目 Sheet、合并年级季度和多期日期列", async () => {
   const parsed = await parseCourseWorkbook(makeFile(), "live");
 
-  assert.deepEqual(parsed.summary.subjects, ["语文", "数学"]);
+  assert.deepEqual(parsed.summary.subjects, ["语文", "数学", "生物"]);
   assert.deepEqual(parsed.summary.grades, ["高一"]);
   assert.deepEqual(parsed.summary.quarters, ["暑期", "秋季"]);
   assert.equal(parsed.library.高一.语文.暑期.早鸟期.length, 2);
@@ -96,5 +97,9 @@ test("解析按科目 Sheet、合并年级季度和多期日期列", async () =>
   assert.equal(
     parsed.library.高一.数学.暑期.一期[0].title,
     "【数学】暑期第一讲",
+  );
+  assert.equal(
+    parsed.library.高一.生物.秋季.早鸟期[0].title,
+    "【生物】秋季第一讲",
   );
 });

@@ -18,6 +18,7 @@ import {
   Video,
 } from "lucide-react";
 import { demoProduct } from "./data/demoProduct";
+import { COURSE_SUBJECTS } from "./courseSubjects";
 import {
   buildMaterialTasks,
   getLiveRows,
@@ -157,6 +158,10 @@ function App() {
     () => allTasks.filter((item) => item.type === taskTypeFilter),
     [allTasks, taskTypeFilter],
   );
+  const downloadableTasks = useMemo(
+    () => tasks.filter((item) => item.count > 0),
+    [tasks],
+  );
   const [activeTaskId, setActiveTaskId] = useState(tasks[0]?.id ?? "");
   const [exportState, setExportState] = useState("idle");
   const posterRef = useRef(null);
@@ -263,7 +268,13 @@ function App() {
   };
 
   const exportCurrent = async () => {
-    if (!activeTask || !posterRef.current || exportState !== "idle") return;
+    if (
+      !activeTask ||
+      !activeTask.count ||
+      !posterRef.current ||
+      exportState !== "idle"
+    )
+      return;
     setExportState("single");
     try {
       const blob = await renderPoster(posterRef.current);
@@ -274,7 +285,7 @@ function App() {
   };
 
   const exportAll = async () => {
-    if (!tasks.length || exportState !== "idle") return;
+    if (!downloadableTasks.length || exportState !== "idle") return;
     setExportState("batch");
     try {
       const [{ default: JSZip }, { default: html2canvas }] = await Promise.all([
@@ -283,7 +294,7 @@ function App() {
       ]);
       const zip = new JSZip();
       const folder = zip.folder(product.name);
-      for (const task of tasks) {
+      for (const task of downloadableTasks) {
         setActiveTaskId(task.id);
         await nextPaint();
         const blob = await renderPosterWith(html2canvas, posterRef.current);
@@ -369,7 +380,7 @@ function App() {
               <button
                 className="primary"
                 onClick={exportAll}
-                disabled={!tasks.length || exportState !== "idle"}
+                disabled={!downloadableTasks.length || exportState !== "idle"}
               >
                 {exportState === "batch" ? (
                   <LoaderCircle className="spin" size={17} />
@@ -378,7 +389,7 @@ function App() {
                 )}
                 {exportState === "batch"
                   ? "正在批量生成"
-                  : `批量下载 ${tasks.length}张`}
+                  : `批量下载 ${downloadableTasks.length}张`}
               </button>
             </div>
           ) : null}
@@ -630,7 +641,7 @@ function TaskWorkspace({
             ) : null}
             <button
               onClick={exportCurrent}
-              disabled={!activeTask || exportState !== "idle"}
+              disabled={!activeTask?.count || exportState !== "idle"}
             >
               {exportState === "single" ? (
                 <LoaderCircle className="spin" size={16} />
@@ -643,7 +654,11 @@ function TaskWorkspace({
           </div>
           <div className="preview-canvas">
             <div className="material-scale">
-              {activeTask ? (
+              {activeTask?.type === "学法直播" && !rows.length ? (
+                <div className="empty-state">
+                  {activeTask.subject}已补充到学法直播科目列表，当前全年课程库暂无该科课表数据。
+                </div>
+              ) : activeTask ? (
                 renderTaskPoster(activeTask, product, rows, posterRef, {
                   giftEditing,
                   onGiftCopyChange: updateGiftCopy,
@@ -1081,7 +1096,12 @@ function LiveAssociationEditor({ draft, setDraft }) {
   const mappedQuarters = quarters.filter((quarter) =>
     draft.coverageQuarters.includes(quarter),
   );
-  const subjects = Object.keys(draft.liveLibrary?.[draft.grade] || {});
+  const importedSubjects = Object.keys(
+    draft.liveLibrary?.[draft.grade] || {},
+  );
+  const subjects = importedSubjects.length
+    ? COURSE_SUBJECTS
+    : Object.keys(draft.live || {});
   const [subject, setSubject] = useState(subjects[0] || "语文");
   const [editingQuarter, setEditingQuarter] = useState(
     mappedQuarters[0] || "",
