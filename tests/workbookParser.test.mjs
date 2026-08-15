@@ -17,10 +17,8 @@ const headers = [
   "课程大纲",
 ];
 
-function makeSheet(subject) {
-  const sheet = XLSX.utils.aoa_to_sheet([
-    ["直播课底表"],
-    headers,
+function makeSheet(subject, { headerless = false } = {}) {
+  const dataRows = [
     [
       "高一",
       "暑期",
@@ -60,11 +58,15 @@ function makeSheet(subject) {
       "",
       `【${subject}】秋季第一讲`,
     ],
-  ]);
-  sheet["!merges"] = [
-    { s: { r: 2, c: 0 }, e: { r: 4, c: 0 } },
-    { s: { r: 2, c: 1 }, e: { r: 3, c: 1 } },
   ];
+  const sheet = XLSX.utils.aoa_to_sheet(
+    headerless ? dataRows : [["直播课底表"], headers, ...dataRows],
+  );
+  if (!headerless)
+    sheet["!merges"] = [
+      { s: { r: 2, c: 0 }, e: { r: 4, c: 0 } },
+      { s: { r: 2, c: 1 }, e: { r: 3, c: 1 } },
+    ];
   return sheet;
 }
 
@@ -72,7 +74,11 @@ function makeFile() {
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, makeSheet("语文"), "语文");
   XLSX.utils.book_append_sheet(workbook, makeSheet("数学"), "数学课表");
-  XLSX.utils.book_append_sheet(workbook, makeSheet("生物"), "生 物－课表");
+  XLSX.utils.book_append_sheet(
+    workbook,
+    makeSheet("生物", { headerless: true }),
+    "生 物－课表",
+  );
   const buffer = XLSX.write(workbook, { type: "array", bookType: "xlsx" });
   return {
     name: "学法直播底表.xlsx",

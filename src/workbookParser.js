@@ -27,8 +27,18 @@ export async function parseCourseWorkbook(file, type) {
     return parsed;
   }
   if (type === "live") {
+    const fallbackHeaders = workbook.SheetNames
+      .map((sheetName) =>
+        readLiveHeaders(XLSX, workbook.Sheets[sheetName]),
+      )
+      .find(Boolean);
     const liveRows = workbook.SheetNames.flatMap((sheetName) =>
-      readLiveSheetRows(XLSX, workbook.Sheets[sheetName], sheetName),
+      readLiveSheetRows(
+        XLSX,
+        workbook.Sheets[sheetName],
+        sheetName,
+        fallbackHeaders,
+      ),
     );
     if (!liveRows.length) {
       throw new Error(
@@ -55,14 +65,22 @@ export async function parseCourseWorkbook(file, type) {
   return parseGifts(rows, cleanGiftWorkbookName(file.name));
 }
 
-function readLiveSheetRows(XLSX, sheet, sheetName) {
+function readLiveHeaders(XLSX, sheet) {
   const matrix = XLSX.utils.sheet_to_json(sheet, {
     defval: "",
     raw: false,
     header: 1,
     blankrows: false,
   });
-  const headerIndex = matrix.findIndex((values) => {
+  const headerIndex = findLiveHeaderIndex(matrix);
+  if (headerIndex < 0) return null;
+  return matrix[headerIndex].map((value, index) =>
+    String(value || `未命名列${index + 1}`).trim(),
+  );
+}
+
+function findLiveHeaderIndex(matrix) {
+  return matrix.findIndex((values) => {
     const headers = values.map(normalizeColumnName);
     return (
       headers.includes(normalizeColumnName("年级")) &&
@@ -75,12 +93,39 @@ function readLiveSheetRows(XLSX, sheet, sheetName) {
       )
     );
   });
-  if (headerIndex < 0) return [];
-  const headers = matrix[headerIndex].map((value, index) =>
-    String(value || `未命名列${index + 1}`).trim(),
-  );
-  return matrix.slice(headerIndex + 1).map((values, index) => {
-    const row = { __sheet: sheetName, __sourceRow: headerIndex + index + 2 };
+}
+
+function readLiveSheetRows(
+  XLSX,
+  sheet,
+  sheetName,
+  fallbackHeaders = null,
+) {
+  const matrix = XLSX.utils.sheet_to_json(sheet, {
+    defval: "",
+    raw: false,
+    header: 1,
+    blankrows: false,
+  });
+  const headerIndex = findLiveHeaderIndex(matrix);
+  const canInheritHeaders =
+    headerIndex < 0 &&
+    fallbackHeaders?.length &&
+    resolveSubject({ __sheet: sheetName });
+  if (headerIndex < 0 && !canInheritHeaders) return [];
+  const headers =
+    headerIndex >= 0
+      ? matrix[headerIndex].map((value, index) =>
+          String(value || `未命名列${index + 1}`).trim(),
+        )
+      : fallbackHeaders;
+  const firstDataRow = headerIndex >= 0 ? headerIndex + 1 : 0;
+  return matrix.slice(firstDataRow).map((values, index) => {
+    const row = {
+      __sheet: sheetName,
+      __sourceRow: firstDataRow + index + 1,
+      __inheritedHeaders: headerIndex < 0,
+    };
     headers.forEach((header, columnIndex) => {
       row[header] = values[columnIndex] ?? "";
     });
