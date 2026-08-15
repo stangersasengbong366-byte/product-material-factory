@@ -1,0 +1,14 @@
+.topbar-actions .batch-ready {
+  height: 38px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid #1aa36f;
+  border-radius: 9px;
+  background: #fff;
+  color: #16825b;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
