@@ -1,4 +1,5 @@
 import { demoProduct } from "./data/demoProduct.js";
+import { COURSE_SUBJECTS } from "./courseSubjects.js";
 
 const STORAGE_KEY = "youdao-course-material-studio-product-v1";
 
@@ -82,20 +83,27 @@ function normalizeGiftCopyOverrides(value = {}) {
 
 export function buildMaterialTasks(product) {
   const tasks = [];
-  const liveSubjects = new Set([
-    ...Object.keys(product.live || {}),
-    ...Object.keys(product.liveLibrary?.[product.grade] || {}),
-  ]);
+  const annualLiveSubjects = Object.keys(
+    product.liveLibrary?.[product.grade] || {},
+  );
+  const liveSubjects = new Set(
+    annualLiveSubjects.length
+      ? [
+          ...COURSE_SUBJECTS,
+          ...Object.keys(product.live || {}),
+          ...annualLiveSubjects,
+        ]
+      : Object.keys(product.live || {}),
+  );
   liveSubjects.forEach((subject) => {
     const rows = getLiveRows(product, subject);
-    if (rows.length)
-      tasks.push({
-        id: slug(`${subject}-live`),
-        subject,
-        type: "学法直播",
-        track: "阶段直播",
-        count: rows.length,
-      });
+    tasks.push({
+      id: slug(`${subject}-live`),
+      subject,
+      type: "学法直播",
+      track: rows.length ? "阶段直播" : "待补充课表",
+      count: rows.length,
+    });
   });
   const videoLibrarySubjects = Object.keys(
     product.videoLibrary?.[product.grade] || {},
