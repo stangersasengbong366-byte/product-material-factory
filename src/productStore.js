@@ -262,6 +262,22 @@ export function buildMaterialTasks(product) {
       priceMode: "nonWenZongNoSingle",
       count: 1,
     });
+    tasks.push({
+      id: slug("price-system-non-wenzong-no-six"),
+      subject: "非文综去六科价格",
+      type: "价格",
+      track: "非文综阶梯价（去六科）",
+      priceMode: "nonWenZongNoSix",
+      count: 1,
+    });
+    tasks.push({
+      id: slug("price-system-non-wenzong-no-single-no-six"),
+      subject: "非文综无单科去六科价格",
+      type: "价格",
+      track: "非文综阶梯价（无单科・去六科）",
+      priceMode: "nonWenZongNoSingleNoSix",
+      count: 1,
+    });
     if (product.priceConfig?.wenZongMode !== "none")
       tasks.push({
         id: slug("price-system-wenzong"),
