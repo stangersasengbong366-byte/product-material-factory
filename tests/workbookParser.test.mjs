@@ -50,13 +50,26 @@ function makeSheet(subject, { headerless = false } = {}) {
       "秋季",
       "2026/8/29",
       "15:30–17:30",
-      "",
+      "同早鸟期",
       "",
       "",
       "",
       "",
       "",
       `【${subject}】秋季第一讲`,
+    ],
+    [
+      "",
+      "",
+      "2026/9/5",
+      "15:30–17:30",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      `【${subject}】秋季第二讲`,
     ],
   ];
   const sheet = XLSX.utils.aoa_to_sheet(
@@ -98,8 +111,8 @@ test("解析按科目 Sheet、合并年级季度和多期日期列", async () =>
   assert.equal(parsed.library.高一.语文.暑期.一期.length, 1);
   assert.equal(parsed.library.高一.语文.暑期.二期.length, 1);
   assert.equal(parsed.library.高一.语文.暑期.三期.length, 1);
-  assert.equal(parsed.library.高一.语文.秋季.早鸟期.length, 1);
-  assert.equal(parsed.library.高一.语文.秋季.一期, undefined);
+  assert.equal(parsed.library.高一.语文.秋季.早鸟期.length, 2);
+  assert.equal(parsed.library.高一.语文.秋季.一期.length, 2);
   assert.equal(
     parsed.library.高一.数学.暑期.一期[0].title,
     "【数学】暑期第一讲",
@@ -107,6 +120,11 @@ test("解析按科目 Sheet、合并年级季度和多期日期列", async () =>
   assert.equal(
     parsed.library.高一.生物.秋季.早鸟期[0].title,
     "【生物】秋季第一讲",
+  );
+  assert.equal(parsed.library.高一.生物.秋季.一期.length, 2);
+  assert.equal(
+    parsed.library.高一.生物.秋季.一期[1].title,
+    "【生物】秋季第二讲",
   );
 });
 

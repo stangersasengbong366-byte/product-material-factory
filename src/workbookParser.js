@@ -139,15 +139,23 @@ function parseLive(rows) {
   const sheetContext = new Map();
   rows.forEach((row) => {
     const sheetName = String(row.__sheet || "");
-    const context = sheetContext.get(sheetName) || { grade: "", quarter: "" };
+    const context = sheetContext.get(sheetName) || {
+      grade: "",
+      quarter: "",
+      batchReferences: {},
+    };
     const subject = resolveSubject(row);
     const explicitGrade = normalizeGrade(pickExact(row, "年级"));
     const explicitQuarter = normalizeQuarter(pickExact(row, "季度"));
     if (explicitGrade && explicitGrade !== context.grade) {
       context.grade = explicitGrade;
       context.quarter = "";
+      context.batchReferences = {};
     }
-    if (explicitQuarter) context.quarter = explicitQuarter;
+    if (explicitQuarter && explicitQuarter !== context.quarter) {
+      context.quarter = explicitQuarter;
+      context.batchReferences = {};
+    }
     sheetContext.set(sheetName, context);
     const grade = explicitGrade || context.grade;
     const quarter = explicitQuarter || context.quarter;
@@ -167,6 +175,21 @@ function parseLive(rows) {
         },
       ]),
     );
+    LIVE_BATCHES.forEach((batch) => {
+      const current = rawBatch[batch];
+      const reference =
+        resolveBatchReference(current.date) ||
+        resolveBatchReference(current.time);
+      if (reference) context.batchReferences[batch] = reference;
+      if (
+        !String(current.date || "").trim() &&
+        !String(current.time || "").trim() &&
+        context.batchReferences[batch]
+      ) {
+        current.date = `同${context.batchReferences[batch]}`;
+      }
+    });
+    sheetContext.set(sheetName, context);
     LIVE_BATCHES.forEach((batch) => {
       const current = rawBatch[batch];
       if (!hasScheduleValue(current.date) && !hasScheduleValue(current.time))
