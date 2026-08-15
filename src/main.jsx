@@ -38,6 +38,7 @@ import {
   expectedVideoLessonCount,
   VIDEO_QUARTERS,
 } from "./courseRules";
+import { getTaskFilename, sanitizeFilenamePart } from "./exportNaming";
 import "./styles.css";
 import "./config.css";
 import "./figma-templates.css";
@@ -52,6 +53,7 @@ import "./gift-layout.css";
 import "./template-color-fidelity.css";
 import "./simple-backend.css";
 import "./price-module.css";
+import "./export.css";
 
 const taskNavItems = [
   { type: "学法直播", icon: LayoutGrid },
@@ -170,6 +172,8 @@ function App() {
   );
   const [activeTaskId, setActiveTaskId] = useState(tasks[0]?.id ?? "");
   const [exportState, setExportState] = useState("idle");
+  const [exportProgress, setExportProgress] = useState(null);
+  const [batchPackage, setBatchPackage] = useState(null);
   const posterRef = useRef(null);
   const activeTask = tasks.find((item) => item.id === activeTaskId) ?? tasks[0];
   const rows =
@@ -212,6 +216,17 @@ function App() {
         : (tasks[0]?.id ?? ""),
     );
   }, [selectedProductId, taskTypeFilter, tasks.length]);
+
+  useEffect(
+    () => () => {
+      if (batchPackage?.url) URL.revokeObjectURL(batchPackage.url);
+    },
+    [batchPackage],
+  );
+
+  useEffect(() => {
+    setBatchPackage(null);
+  }, [selectedProductId, taskTypeFilter]);
 
   const updateProduct = (next) => {
     const normalized = normalizeProduct(next);
@@ -285,6 +300,9 @@ function App() {
     try {
       const blob = await renderPoster(posterRef.current);
       downloadBlob(blob, getTaskFilename(product, activeTask));
+    } catch (error) {
+      setSyncState(`下载失败：${error.message}`);
+      console.error("单张素材下载失败", error);
     } finally {
       setExportState("idle");
     }
@@ -293,26 +311,48 @@ function App() {
   const exportAll = async () => {
     if (!downloadableTasks.length || exportState !== "idle") return;
     setExportState("batch");
+    setExportProgress({ current: 0, total: downloadableTasks.length });
+    setBatchPackage(null);
+    setSyncState(`正在批量生成 · 0/${downloadableTasks.length}`);
+    const previousTaskId = activeTaskId;
     try {
       const [{ default: JSZip }, { default: html2canvas }] = await Promise.all([
         import("jszip"),
         import("html2canvas"),
       ]);
       const zip = new JSZip();
-      const folder = zip.folder(product.name);
-      for (const task of downloadableTasks) {
+      const folder = zip.folder(sanitizeFilenamePart(product.name));
+      for (const [index, task] of downloadableTasks.entries()) {
         setActiveTaskId(task.id);
         await nextPaint();
+        if (!posterRef.current)
+          throw new Error(`${task.subject}素材画布尚未准备完成`);
         const blob = await renderPosterWith(html2canvas, posterRef.current);
         folder.file(getTaskFilename(product, task), blob);
+        setExportProgress({
+          current: index + 1,
+          total: downloadableTasks.length,
+        });
+        setSyncState(
+          `正在批量生成 · ${index + 1}/${downloadableTasks.length}`,
+        );
       }
       const bundle = await zip.generateAsync({
         type: "blob",
         compression: "DEFLATE",
         compressionOptions: { level: 6 },
       });
-      downloadBlob(bundle, `${product.name}_课程素材_${formatDate()}.zip`);
+      const filename = `${sanitizeFilenamePart(product.name)}_课程素材_${formatDate()}.zip`;
+      const url = URL.createObjectURL(bundle);
+      setBatchPackage({ url, filename, count: downloadableTasks.length });
+      triggerDownload(url, filename);
+      setSyncState(`批量下载完成 · ${downloadableTasks.length} 张素材`);
+    } catch (error) {
+      setSyncState(`批量下载失败：${error.message}`);
+      console.error("批量素材下载失败", error);
     } finally {
+      setActiveTaskId(previousTaskId);
+      setExportProgress(null);
       setExportState("idle");
     }
   };
@@ -394,9 +434,24 @@ function App() {
                   <Play size={17} fill="currentColor" />
                 )}
                 {exportState === "batch"
-                  ? "正在批量生成"
+                  ? `正在生成 ${exportProgress?.current || 0}/${exportProgress?.total || downloadableTasks.length}`
                   : `批量下载 ${downloadableTasks.length}张`}
               </button>
+              {batchPackage && exportState === "idle" ? (
+                <a
+                  className="batch-ready"
+                  href={batchPackage.url}
+                  download={batchPackage.filename}
+                  onClick={() =>
+                    setSyncState(
+                      `已重新下载 · ${batchPackage.count} 张素材`,
+                    )
+                  }
+                >
+                  <Download size={17} />
+                  下载已生成压缩包
+                </a>
+              ) : null}
             </div>
           ) : null}
         </header>
@@ -2562,14 +2617,17 @@ function pngCrc32(bytes) {
 }
 function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
+  triggerDownload(url, filename);
+  window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+function triggerDownload(url, filename) {
   const anchor = document.createElement("a");
   anchor.href = url;
   anchor.download = filename;
+  anchor.style.display = "none";
+  document.body.appendChild(anchor);
   anchor.click();
-  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-function getTaskFilename(product, task) {
-  return `${product.name}_${product.grade}_${task.subject}_${task.type}_${task.track}.png`;
+  anchor.remove();
 }
 function formatDate() {
   return new Date().toISOString().slice(0, 10);
