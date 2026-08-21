@@ -1835,7 +1835,7 @@ const LivePoster = React.forwardRef(function LivePoster(
         <div className="figma-live-intro">
           <div>
             <b>{rows.length}学时</b>
-            <strong>清北名师直播2小时传授解题大招</strong>
+            <strong>清北毕业名师直播2小时传授解题大招</strong>
             <span>同步校内进度+讲练结合</span>
           </div>
           <div className="figma-feature-list">
