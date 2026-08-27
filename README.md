@@ -28,6 +28,8 @@ npm run dev:cloud
 
 普通页面开发仍可使用 `npm run dev`；开发服务器会把 `/api` 请求代理到正式 Netlify 站点，方便将 localhost 中已有的数据直接保存到新云端。
 
+首次迁移时，如果 Netlify 尚无配置且页面运行在 localhost，系统会自动将浏览器中现有的本地产品配置写入 Netlify；正式站点不会用示例数据自动覆盖云端。
+
 如果前端和 Netlify API 分开部署，可在 `.env` 中指定：
 
 ```bash

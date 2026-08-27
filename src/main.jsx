@@ -191,6 +191,16 @@ function App() {
     loadCloudStudio()
       .then((config) => {
         if (!config?.products?.length) {
+          if (window.location.hostname === "localhost") {
+            setSyncState("正在迁移本地配置到 Netlify");
+            return saveCloudStudio({
+              products: products.map(stripAnnualLibrary),
+              annualLibrary: normalizeAnnualLibrary(annualLibrary),
+              cardTypes: [...new Set(products.map((item) => item.stage))],
+            }).then(() => {
+              setSyncState(`本地配置已迁移 · ${products.length} 个产品`);
+            });
+          }
           setSyncState("云端暂无素材配置");
           return;
         }
