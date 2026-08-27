@@ -18,11 +18,18 @@ npm run preview
 
 ## 云端配置
 
-复制 `.env.example` 为 `.env`，配置 Supabase 项目地址和匿名密钥：
+云端数据已迁移为 Netlify Functions + Netlify Blobs。部署到 Netlify 后无需配置数据库地址或密钥，站点会通过同源接口 `/api/studio-config` 自动读写长期保存的数据。
+
+需要在本地联调云端接口时使用：
 
 ```bash
-VITE_SUPABASE_URL=
-VITE_SUPABASE_ANON_KEY=
+npm run dev:cloud
 ```
 
-`.env` 不会提交到仓库。
+普通页面开发仍可使用 `npm run dev`；开发服务器会把 `/api` 请求代理到正式 Netlify 站点，方便将 localhost 中已有的数据直接保存到新云端。
+
+如果前端和 Netlify API 分开部署，可在 `.env` 中指定：
+
+```bash
+VITE_CLOUD_API_URL=https://你的站点.netlify.app/api/studio-config
+```

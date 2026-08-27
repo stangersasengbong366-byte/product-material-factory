@@ -29,6 +29,7 @@ import {
 } from "./productStore";
 import {
   cloudEnabled,
+  cloudProviderName,
   loadCloudStudio,
   saveCloudStudio,
 } from "./cloudRepository";
@@ -127,7 +128,7 @@ function App() {
     () => loadProduct().id,
   );
   const [syncState, setSyncState] = useState(
-    cloudEnabled ? "正在读取云端" : "未连接 Supabase",
+    cloudEnabled ? `正在读取 ${cloudProviderName}` : "未连接云端存储",
   );
   const storedProduct =
     products.find((item) => item.id === selectedProductId) ?? products[0];
@@ -725,7 +726,7 @@ function CourseConfig({
         videoImportIgnoredRows: normalized.videoImportIgnoredRows,
       });
       await onSaveCloud(nextProducts, nextAnnualLibrary);
-      setMessage("产品、全年课程库和赠课映射已保存到 Supabase");
+      setMessage(`产品、全年课程库和赠课映射已保存到 ${cloudProviderName}`);
     } catch (error) {
       setMessage(error.message);
     } finally {
@@ -917,7 +918,7 @@ function PriceConfigPage({
     );
     try {
       await onSaveCloud(nextProducts);
-      setMessage("价格配置已保存到 Supabase");
+      setMessage(`价格配置已保存到 ${cloudProviderName}`);
     } catch (error) {
       setMessage(error.message);
     } finally {

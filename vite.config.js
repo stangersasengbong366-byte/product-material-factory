@@ -6,6 +6,15 @@ export default defineConfig({
   base: process.env.GITHUB_ACTIONS
     ? "/product-material-factory/"
     : "/",
-  // 本地开发复用同一组织的 Supabase 环境配置；部署时仍可直接设置 VITE_* 环境变量。
+  // 本地开发仍可复用同一工作区的非敏感 VITE_* 配置。
   envDir: "../有道领世 产品权益",
+  server: {
+    proxy: {
+      "/api": {
+        target: "https://youdao-product-material-factory.netlify.app",
+        changeOrigin: true,
+        secure: true,
+      },
+    },
+  },
 });
