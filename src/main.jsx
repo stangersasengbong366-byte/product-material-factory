@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { formatCourseDate } from "./dateFormat.js";
 import {
   CloudUpload,
   Download,
@@ -1879,7 +1880,7 @@ const LivePoster = React.forwardRef(function LivePoster(
               <div className="figma-live-rows">
                 {group.rows.map((row, index) => (
                   <p key={`${group.quarter}-${row.id ?? row.no ?? index}`}>
-                    <span>{row.date || "以排课为准"}</span>
+                    <span>{formatCourseDate(row.date) || "以排课为准"}</span>
                     <span>{index + 1}</span>
                     <strong>{row.title || row.live}</strong>
                   </p>
