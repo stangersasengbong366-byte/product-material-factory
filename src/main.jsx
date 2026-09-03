@@ -1447,7 +1447,7 @@ function VideoAssociationSummary({ draft }) {
         task.subject,
         task.track,
       ).length,
-      expected: expectedVideoLessonCount(task.subject, quarter),
+      expected: expectedVideoLessonCount(task.subject, quarter, draft.grade),
     })),
   );
   const issues = counts.filter((item) => item.count !== item.expected);

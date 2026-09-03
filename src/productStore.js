@@ -367,17 +367,20 @@ export function getVideoRows(
     const stage = subjectLibrary[quarter];
     if (!stage) return [];
     const allowedBuckets = new Set(["common", "layered", bucket]);
-    const orderedRows = Array.isArray(stage.ordered)
-      ? stage.ordered
-      : [
-          ...(stage.common || []),
-          ...(stage.layered || []),
-          ...(stage[bucket] || []),
-        ].sort(
-          (left, right) =>
-            Number(left.sourceOrder ?? Number.MAX_SAFE_INTEGER) -
-            Number(right.sourceOrder ?? Number.MAX_SAFE_INTEGER),
-        );
+    const trackRows = stage.orderedByTrack?.[bucket];
+    const orderedRows = Array.isArray(trackRows)
+      ? trackRows
+      : Array.isArray(stage.ordered)
+        ? stage.ordered
+        : [
+            ...(stage.common || []),
+            ...(stage.layered || []),
+            ...(stage[bucket] || []),
+          ].sort(
+            (left, right) =>
+              Number(left.sourceOrder ?? Number.MAX_SAFE_INTEGER) -
+              Number(right.sourceOrder ?? Number.MAX_SAFE_INTEGER),
+          );
     return orderedRows
       .filter((row) => allowedBuckets.has(row.bucket))
       .map((row) => ({
@@ -506,6 +509,21 @@ function normalizeVideoLibrary(data) {
           quarter,
           title: row.title || "未命名知识视频",
         }));
+        if (buckets?.orderedByTrack) {
+          target.orderedByTrack = Object.fromEntries(
+            ["target", "elite"].map((track) => [
+              track,
+              (buckets.orderedByTrack[track] || []).map((row, index) => ({
+                ...row,
+                no: row.no ?? index + 1,
+                grade,
+                subject,
+                quarter,
+                title: row.title || "未命名知识视频",
+              })),
+            ]),
+          );
+        }
       }),
     ),
   );

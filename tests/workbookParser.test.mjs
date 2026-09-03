@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import * as XLSX from "xlsx";
 import { parseCourseWorkbook } from "../src/workbookParser.js";
+import { getVideoRows } from "../src/productStore.js";
 
 const headers = [
   "年级",
@@ -181,4 +182,97 @@ test("知识视频将寒假和冬季保留为独立课程阶段", async () => {
     ).expected,
     20,
   );
+});
+
+function makeTrackedVideoFile() {
+  const workbook = XLSX.utils.book_new();
+  const header = [
+    "模块",
+    "视频大纲",
+    "是否分层",
+    "（1星/2星/3星/4星）",
+    "（夏/秋/冬/春）",
+  ];
+  XLSX.utils.book_append_sheet(
+    workbook,
+    XLSX.utils.aoa_to_sheet([
+      header,
+      ["函数", "秋季通用课", "通用", "2星", "秋季（一轮）"],
+      ["函数", "秋季目标专属课", "目标", "3星", "秋季（一轮）"],
+      ["函数", "春季通用课", "通用", "2星", "春季（二轮）"],
+      [
+        "函数",
+        "春季目标差异课",
+        "目标+菁英2个班型不同",
+        "3星",
+        "春季（二轮）",
+      ],
+    ]),
+    "高三-数学-目标",
+  );
+  XLSX.utils.book_append_sheet(
+    workbook,
+    XLSX.utils.aoa_to_sheet([
+      header,
+      ["函数", "秋季通用课", "通用", "2星", "秋季（一轮）"],
+      ["函数", "秋季菁英专属课", "菁英", "4星", "秋季（一轮）"],
+      ["函数", "春季通用课", "通用", "2星", "春季（二轮）"],
+      [
+        "函数",
+        "春季菁英差异课",
+        "目标+菁英2个班型不同",
+        "4星",
+        "春季（二轮）",
+      ],
+    ]),
+    "高三-数学-菁英",
+  );
+  const buffer = XLSX.write(workbook, { type: "array", bookType: "xlsx" });
+  return {
+    name: "双班型知识视频底表.xlsx",
+    async arrayBuffer() {
+      return buffer;
+    },
+  };
+}
+
+test("目标班与菁英班分 Sheet 时分别保留专属课程和原表顺序", async () => {
+  const parsed = await parseCourseWorkbook(makeTrackedVideoFile(), "video");
+  const makeProduct = (quarter) => ({
+    grade: "高三",
+    coverageQuarters: [quarter],
+    videoLibrary: parsed.library,
+  });
+
+  assert.deepEqual(
+    getVideoRows(makeProduct("秋季"), "数学", "目标班").map(
+      (row) => row.title,
+    ),
+    ["秋季通用课", "秋季目标专属课"],
+  );
+  assert.deepEqual(
+    getVideoRows(makeProduct("秋季"), "数学", "菁英班").map(
+      (row) => row.title,
+    ),
+    ["秋季通用课", "秋季菁英专属课"],
+  );
+  assert.deepEqual(
+    getVideoRows(makeProduct("春季"), "数学", "目标班").map(
+      (row) => row.title,
+    ),
+    ["春季通用课", "春季目标差异课"],
+  );
+  assert.deepEqual(
+    getVideoRows(makeProduct("春季"), "数学", "菁英班").map(
+      (row) => row.title,
+    ),
+    ["春季通用课", "春季菁英差异课"],
+  );
+  const autumn = parsed.summary.cells.find(
+    (item) => item.grade === "高三" && item.quarter === "秋季",
+  );
+  assert.equal(autumn.targetSource, "高三-数学-目标");
+  assert.equal(autumn.eliteSource, "高三-数学-菁英");
+  assert.equal(autumn.targetLessons, 2);
+  assert.equal(autumn.eliteLessons, 2);
 });

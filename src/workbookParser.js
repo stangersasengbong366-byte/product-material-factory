@@ -321,7 +321,7 @@ function parseVideo(rows) {
       const layerValue =
         pickExact(row, "是否分层") ||
         pick(row, ["班型", "层次", "分层", "视频班型"]);
-      const bucket = resolveVideoBucket(layerValue, title);
+      const bucket = resolveVideoBucket(layerValue, title, sheetName);
       const item = {
         sourceOrder: sourceIndex,
         no:
@@ -366,26 +366,48 @@ function parseVideo(rows) {
     const expected = expectedVideoLessonCount(
       options[0].subject,
       options[0].quarter,
+      options[0].grade,
     );
-    const selected = [...options].sort(
-      (a, b) =>
-        Math.abs(resolvedVideoCount(a.items) - expected) -
-        Math.abs(resolvedVideoCount(b.items) - expected),
-    )[0];
+    const fallback = selectClosestVideoSource(options, expected);
+    const targetSource =
+      selectClosestVideoSource(
+        options.filter((option) =>
+          matchesVideoSheetTrack(option.sheetName, "target"),
+        ),
+        expected,
+      ) || fallback;
+    const eliteSource =
+      selectClosestVideoSource(
+        options.filter((option) =>
+          matchesVideoSheetTrack(option.sheetName, "elite"),
+        ),
+        expected,
+      ) || fallback;
+    const selected = fallback;
+    const orderedByTrack = {
+      target: rowsForVideoTrack(targetSource.items, "target"),
+      elite: rowsForVideoTrack(eliteSource.items, "elite"),
+    };
     const buckets = { common: [], target: [], elite: [], layered: [] };
-    selected.items.forEach((item) => buckets[item.bucket].push(item));
+    uniqueVideoRows([
+      ...orderedByTrack.target,
+      ...orderedByTrack.elite,
+    ]).forEach((item) => buckets[item.bucket].push(item));
     ((library[selected.grade] ||= {})[selected.subject] ||= {})[
       selected.quarter
-    ] = { ...buckets, ordered: selected.items };
+    ] = { ...buckets, ordered: selected.items, orderedByTrack };
     selectedSources.push({
       grade: selected.grade,
       subject: selected.subject,
       quarter: selected.quarter,
-      source: selected.sheetName,
-      targetLessons:
-        buckets.common.length + buckets.layered.length + buckets.target.length,
-      eliteLessons:
-        buckets.common.length + buckets.layered.length + buckets.elite.length,
+      source:
+        targetSource.sheetName === eliteSource.sheetName
+          ? targetSource.sheetName
+          : `${targetSource.sheetName} + ${eliteSource.sheetName}`,
+      targetSource: targetSource.sheetName,
+      eliteSource: eliteSource.sheetName,
+      targetLessons: orderedByTrack.target.length,
+      eliteLessons: orderedByTrack.elite.length,
       expected,
     });
   });
@@ -407,12 +429,60 @@ function normalizeVideoQuarter(value) {
   return "";
 }
 
-function resolveVideoBucket(value, title) {
+function resolveVideoBucket(value, title, sheetName = "") {
   const label = `${value || ""} ${title || ""}`;
-  if (/菁英|精英|英才/.test(label)) return "elite";
-  if (/目标/.test(label)) return "target";
+  const hasElite = /菁英|精英|英才/.test(label);
+  const hasTarget = /目标/.test(label);
+  if (hasElite && hasTarget) {
+    if (matchesVideoSheetTrack(sheetName, "target")) return "target";
+    if (matchesVideoSheetTrack(sheetName, "elite")) return "elite";
+    return "layered";
+  }
+  if (hasElite) return "elite";
+  if (hasTarget) return "target";
   if (/^\s*是\s*/.test(String(value || ""))) return "layered";
   return "common";
+}
+
+function matchesVideoSheetTrack(sheetName, track) {
+  const label = String(sheetName || "");
+  const hasElite = /菁英|精英|英才/.test(label);
+  const hasTarget = /目标/.test(label);
+  return track === "elite"
+    ? hasElite && !hasTarget
+    : hasTarget && !hasElite;
+}
+
+function selectClosestVideoSource(options, expected) {
+  if (!options.length) return null;
+  return [...options].sort(
+    (a, b) =>
+      Math.abs(resolvedVideoCount(a.items) - expected) -
+      Math.abs(resolvedVideoCount(b.items) - expected),
+  )[0];
+}
+
+function rowsForVideoTrack(items, track) {
+  const allowedBuckets = new Set(["common", "layered", track]);
+  return items.filter((item) => allowedBuckets.has(item.bucket));
+}
+
+function uniqueVideoRows(items) {
+  const seen = new Set();
+  return items.filter((item) => {
+    const signature = [
+      item.bucket,
+      item.title,
+      item.module,
+      item.scoreShare,
+      item.difficulty,
+    ]
+      .map((value) => String(value || "").trim())
+      .join("|");
+    if (seen.has(signature)) return false;
+    seen.add(signature);
+    return true;
+  });
 }
 
 function resolvedVideoCount(items) {
