@@ -152,3 +152,36 @@ test("精英班旧数据统一展示为菁英班并保留知识视频母版修�
     "修改后的课程",
   );
 });
+
+test("知识视频历史主理人文案统一升级为清北毕业主理人", () => {
+  const product = normalizeProduct({
+    id: "video-host-copy",
+    name: "高三秋冬衔接卡",
+    grade: "高三",
+    stage: "秋冬衔接卡",
+    videoTemplateOverride: {
+      headline: "清北主理人 精心录制视频",
+      benefits: [
+        {
+          title: "七轮打磨",
+          detail: "清北主理人七轮打磨的课程",
+        },
+      ],
+      adviceLines: ["清北主理人建议按模块学习"],
+    },
+    priceConfig: { enabled: false },
+  });
+
+  assert.equal(
+    product.videoTemplateOverride.headline,
+    "清北毕业主理人 精心录制视频",
+  );
+  assert.equal(
+    product.videoTemplateOverride.benefits[0].detail,
+    "清北毕业主理人七轮打磨的课程",
+  );
+  assert.equal(
+    product.videoTemplateOverride.adviceLines[0],
+    "清北毕业主理人建议按模块学习",
+  );
+});

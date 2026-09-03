@@ -108,19 +108,19 @@ function normalizeVideoTemplateOverride(value = {}) {
   const normalized = Object.fromEntries(
     textFields
       .filter((field) => value[field] != null)
-      .map((field) => [field, String(value[field])]),
+      .map((field) => [field, normalizeVideoHostCopy(value[field])]),
   );
   if (Array.isArray(value.benefits)) {
     normalized.benefits = value.benefits.slice(0, 3).map((benefit = {}) => ({
       icon: String(benefit.icon || ""),
-      title: String(benefit.title || ""),
-      detail: String(benefit.detail || ""),
+      title: normalizeVideoHostCopy(benefit.title),
+      detail: normalizeVideoHostCopy(benefit.detail),
     }));
   }
   if (Array.isArray(value.adviceLines)) {
     normalized.adviceLines = value.adviceLines
       .slice(0, 2)
-      .map((line) => String(line || ""));
+      .map(normalizeVideoHostCopy);
   }
   if (value.pages && typeof value.pages === "object") {
     normalized.pages = Object.fromEntries(
@@ -151,6 +151,10 @@ function normalizeVideoTemplateOverride(value = {}) {
     );
   }
   return normalized;
+}
+
+function normalizeVideoHostCopy(value) {
+  return String(value || "").replaceAll("清北主理人", "清北毕业主理人");
 }
 
 function normalizeVideoTrack(value) {

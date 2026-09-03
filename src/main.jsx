@@ -1945,7 +1945,7 @@ const VideoPoster = React.forwardRef(function VideoPoster(
       icon: "靶",
       title: "七轮打磨",
       detail:
-        "清北主理人七轮打磨的课程，国家正规ISBN版号，多轮审核校定稿，内容质量有保障",
+        "清北毕业主理人七轮打磨的课程，国家正规ISBN版号，多轮审核校定稿，内容质量有保障",
     },
     {
       icon: "▶",
@@ -1964,7 +1964,7 @@ const VideoPoster = React.forwardRef(function VideoPoster(
     knowledgeLabel: override.knowledgeLabel || "知识视频",
     headline:
       override.headline ||
-      "清北主理人 精心录制视频，30分钟一节课 讲透一个知识点",
+      "清北毕业主理人 精心录制视频，30分钟一节课 讲透一个知识点",
     outlineTitle: override.outlineTitle || "课程大纲",
     levelBasic: override.levelBasic || "基础巩固",
     levelAbility: override.levelAbility || "能力提升",
