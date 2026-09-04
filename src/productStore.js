@@ -489,42 +489,31 @@ function normalizeVideoLibrary(data) {
       Object.entries(quarters || {}).forEach(([quarter, buckets]) => {
         const target = (((result[grade] ||= {})[subject] ||= {})[quarter] ||=
           {});
-        ["common", "target", "elite", "layered"].forEach((bucket) => {
-          target[bucket] = (buckets?.[bucket] || []).map((row, index) => ({
-            ...row,
-            no: row.no ?? index + 1,
-            grade,
-            subject,
-            quarter,
-            bucket,
-            title: row.title || "未命名知识视频",
-          }));
-        });
-        target.ordered = (buckets?.ordered || [
+        const fallbackOrdered = [
           ...(buckets?.common || []),
           ...(buckets?.target || []),
           ...(buckets?.elite || []),
           ...(buckets?.layered || []),
-        ]).map((row, index) => ({
-          ...row,
-          no: row.no ?? index + 1,
-          grade,
-          subject,
-          quarter,
-          title: row.title || "未命名知识视频",
-        }));
+        ];
+        ["common", "target", "elite", "layered"].forEach((bucket) => {
+          target[bucket] = normalizeVideoRows(
+            buckets?.[bucket] || [],
+            { grade, subject, quarter, bucket },
+          );
+        });
+        target.ordered = normalizeVideoRows(
+          buckets?.ordered || fallbackOrdered,
+          { grade, subject, quarter },
+        );
         if (buckets?.orderedByTrack) {
           target.orderedByTrack = Object.fromEntries(
             ["target", "elite"].map((track) => [
               track,
-              (buckets.orderedByTrack[track] || []).map((row, index) => ({
-                ...row,
-                no: row.no ?? index + 1,
+              normalizeVideoRows(buckets.orderedByTrack[track] || [], {
                 grade,
                 subject,
                 quarter,
-                title: row.title || "未命名知识视频",
-              })),
+              }),
             ]),
           );
         }
@@ -532,6 +521,29 @@ function normalizeVideoLibrary(data) {
     ),
   );
   return result;
+}
+
+function normalizeVideoRows(rows, context = {}) {
+  let currentModule = "";
+  let currentScoreShare = "";
+  return (rows || []).map((row, index) => {
+    const module = String(row?.module || "").trim();
+    const scoreShare = String(row?.scoreShare || "").trim();
+    if (module && module !== currentModule) {
+      currentModule = module;
+      currentScoreShare = scoreShare;
+    } else if (scoreShare) {
+      currentScoreShare = scoreShare;
+    }
+    return {
+      ...row,
+      no: row.no ?? index + 1,
+      ...context,
+      title: row.title || "未命名知识视频",
+      module: module || currentModule || "其他模块",
+      scoreShare: scoreShare || currentScoreShare,
+    };
+  });
 }
 
 function normalizeGifts(data) {

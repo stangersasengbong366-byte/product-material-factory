@@ -306,9 +306,21 @@ function parseVideo(rows) {
       return;
     }
     let currentModule = "";
+    let currentScoreShare = "";
     const stageRows = {};
     sheetRows.forEach((row, sourceIndex) => {
-      currentModule = pickExact(row, "模块") || currentModule;
+      const moduleValue = pickExact(row, "模块");
+      const scoreShareValue =
+        pickExact(row, "涉及知识所占高考分值及题型") ||
+        pick(row, ["模块分值", "分值占比", "分值", "占比"]);
+      if (moduleValue) {
+        currentModule = moduleValue;
+        // A new module starts a new merged score cell. Do not carry a
+        // previous module's score into a genuinely blank score cell.
+        currentScoreShare = scoreShareValue;
+      } else if (scoreShareValue) {
+        currentScoreShare = scoreShareValue;
+      }
       const title =
         pickExact(row, "视频大纲") ||
         pick(row, ["知识视频标题", "课程内容", "课程名称", "课题", "标题"]);
@@ -337,9 +349,7 @@ function parseVideo(rows) {
           pick(row, ["星级难度", "难度", "难度星级"]) ||
           "1星",
         module: currentModule || "其他模块",
-        scoreShare:
-          pickExact(row, "涉及知识所占高考分值及题型") ||
-          pick(row, ["模块分值", "分值占比", "分值", "占比"]),
+        scoreShare: currentScoreShare,
         layer:
           bucket === "common"
             ? "通用"

@@ -184,6 +184,47 @@ test("知识视频将寒假和冬季保留为独立课程阶段", async () => {
   );
 });
 
+test("知识视频向下继承合并模块的分值且不跨模块串值", async () => {
+  const workbook = XLSX.utils.book_new();
+  const sheet = XLSX.utils.aoa_to_sheet([
+    [
+      "模块",
+      "视频大纲",
+      "是否分层",
+      "（1星/2星/3星/4星）",
+      "（夏/秋/冬/春）",
+      "涉及知识所占高考分值及题型",
+    ],
+    ["函数", "函数概念", "否", "1星", "秋季", "约10分"],
+    ["", "函数定义域", "否", "2星", "秋季", ""],
+    ["不等式", "不等式性质", "否", "1星", "秋季", ""],
+  ]);
+  sheet["!merges"] = [
+    { s: { r: 1, c: 0 }, e: { r: 2, c: 0 } },
+    { s: { r: 1, c: 5 }, e: { r: 2, c: 5 } },
+  ];
+  XLSX.utils.book_append_sheet(workbook, sheet, "高一数学");
+  const buffer = XLSX.write(workbook, { type: "array", bookType: "xlsx" });
+  const parsed = await parseCourseWorkbook(
+    {
+      name: "合并分值知识视频底表.xlsx",
+      async arrayBuffer() {
+        return buffer;
+      },
+    },
+    "video",
+  );
+  const rows = parsed.library.高一.数学.秋季.ordered;
+  assert.deepEqual(
+    rows.map((row) => [row.title, row.module, row.scoreShare]),
+    [
+      ["函数概念", "函数", "约10分"],
+      ["函数定义域", "函数", "约10分"],
+      ["不等式性质", "不等式", ""],
+    ],
+  );
+});
+
 function makeTrackedVideoFile() {
   const workbook = XLSX.utils.book_new();
   const header = [

@@ -153,6 +153,47 @@ test("精英班旧数据统一展示为菁英班并保留知识视频母版修�
   );
 });
 
+test("规范化历史知识视频数据时补齐同模块缺失的分值", () => {
+  const product = normalizeProduct({
+    id: "legacy-video-score",
+    name: "高一秋实卡",
+    grade: "高一",
+    stage: "秋实卡",
+    coverageQuarters: ["秋季"],
+    videoLibrary: {
+      高一: {
+        数学: {
+          秋季: {
+            common: [
+              {
+                title: "函数概念",
+                module: "函数",
+                scoreShare: "约10分",
+                bucket: "common",
+              },
+              {
+                title: "函数定义域",
+                module: "函数",
+                scoreShare: "",
+                bucket: "common",
+              },
+              {
+                title: "不等式性质",
+                module: "不等式",
+                scoreShare: "",
+                bucket: "common",
+              },
+            ],
+          },
+        },
+      },
+    },
+    priceConfig: { enabled: false },
+  });
+  const rows = product.videoLibrary.高一.数学.秋季.common;
+  assert.deepEqual(rows.map((row) => row.scoreShare), ["约10分", "约10分", ""]);
+});
+
 test("知识视频历史主理人文案统一升级为清北毕业主理人", () => {
   const product = normalizeProduct({
     id: "video-host-copy",
