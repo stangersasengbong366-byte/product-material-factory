@@ -193,7 +193,7 @@ function App() {
       .then((config) => {
         if (!config?.products?.length) {
           if (window.location.hostname === "localhost") {
-            setSyncState("正在迁移本地配置到 Netlify");
+            setSyncState(`正在迁移本地配置到 ${cloudProviderName}`);
             return saveCloudStudio({
               products: products.map(stripAnnualLibrary),
               annualLibrary: normalizeAnnualLibrary(annualLibrary),
@@ -277,7 +277,7 @@ function App() {
   const addProduct = (stage) => {
     const next = normalizeProduct({
       id: `product-${Date.now()}`,
-      name: `${stage}新产品`,
+      name: `${stage}产品`,
       grade: "高一",
       stage,
       coverageQuarters: inferCoverageQuarters(stage),
@@ -2270,7 +2270,7 @@ const GiftPoster = React.forwardRef(function GiftPoster(
         />
         <header>
           <h2>
-            <em>新{product.grade}</em>
+            <em>{product.grade}</em>
             <span
               className={editable ? "gift-editable" : ""}
               contentEditable={editable}

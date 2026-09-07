@@ -2,6 +2,7 @@ node_modules
 dist
 .env
 outputs
+.wrangler
 
 # Local Netlify folder
 .netlify

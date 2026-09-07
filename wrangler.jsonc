@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "youdao-course-material-storage",
+  "main": "cloudflare/worker.mjs",
+  "compatibility_date": "2026-09-02",
+  "d1_databases": [
+    {
+      "binding": "STUDIO_DB",
+      "database_name": "course-material-studio",
+      "database_id": "d509c967-e560-4832-bbb4-2feebc42e214"
+    }
+  ],
+  "vars": {
+    "APP_ORIGIN": "https://youdao-product-material-factory.netlify.app"
+  }
+}

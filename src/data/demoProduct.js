@@ -29,7 +29,7 @@ function buildLive(subject, titles, time) {
 
 export const demoProduct = {
   id: "g1-autumn-card",
-  name: "新高一秋实卡",
+  name: "高一秋实卡",
   grade: "高一",
   stage: "秋实卡",
   status: "样片制作中",

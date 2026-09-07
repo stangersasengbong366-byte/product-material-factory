@@ -11,7 +11,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "https://youdao-product-material-factory.netlify.app",
+        target: process.env.VITE_CLOUD_API_ORIGIN || "https://youdao-course-material-storage.workers.dev",
         changeOrigin: true,
         secure: true,
       },
