@@ -1,4 +1,6 @@
-const CLOUD_API_URL = import.meta.env.VITE_CLOUD_API_URL || "/api/studio-config";
+const CLOUD_API_URL =
+  import.meta.env.VITE_CLOUD_API_URL ||
+  "https://youdao-course-material-storage.stangersasengbong366.workers.dev/api/studio-config";
 
 export const cloudEnabled = true;
 export const cloudProviderName = "Cloudflare";
