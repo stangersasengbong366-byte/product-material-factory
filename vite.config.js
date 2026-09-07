@@ -11,7 +11,9 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: process.env.VITE_CLOUD_API_ORIGIN || "https://youdao-course-material-storage.workers.dev",
+        target:
+          process.env.VITE_CLOUD_API_ORIGIN ||
+          "https://youdao-course-material-storage.stangersasengbong366.workers.dev",
         changeOrigin: true,
         secure: true,
       },
