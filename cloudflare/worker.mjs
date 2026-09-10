@@ -72,10 +72,11 @@ export default {
       }
 
       const current = await env.STUDIO_DB
-        .prepare("SELECT revision FROM studio_config WHERE id = ?")
+        .prepare("SELECT payload, revision FROM studio_config WHERE id = ?")
         .bind(CONFIG_ID)
         .first();
       const expectedRevision = Number(request.headers.get("X-Cloud-Revision"));
+      const incomingVersion = Number(payload.version);
       const updatedAt = new Date().toISOString();
 
       if (!current) {
@@ -89,9 +90,21 @@ export default {
         return json({ saved: true, updatedAt, revision: 1 });
       }
 
-      if (!Number.isInteger(expectedRevision) || expectedRevision !== current.revision) {
+      let savedVersion = null;
+      try {
+        savedVersion = Number(JSON.parse(current.payload).version);
+      } catch {
+        // 兼容早期没有版本号的云端记录：后续这次保存会补齐版本号。
+      }
+      const incomingIsNewer =
+        Number.isFinite(incomingVersion) &&
+        (!Number.isFinite(savedVersion) || incomingVersion > savedVersion);
+      const revisionMatches =
+        Number.isInteger(expectedRevision) && expectedRevision === current.revision;
+
+      if (!revisionMatches && !incomingIsNewer) {
         return json({
-          message: "云端配置已被同事更新，请刷新页面后再保存，避免覆盖对方修改",
+          message: "云端已有更新更晚的版本，已保留最新版，请刷新页面查看",
           revision: current.revision,
         }, 409);
       }
@@ -102,14 +115,19 @@ export default {
            SET payload = ?, updated_at = ?, revision = revision + 1
            WHERE id = ? AND revision = ?`,
         )
-        .bind(JSON.stringify(payload), updatedAt, CONFIG_ID, expectedRevision)
+        .bind(JSON.stringify(payload), updatedAt, CONFIG_ID, current.revision)
         .run();
       if (result.meta.changes !== 1) {
         return json({
-          message: "云端配置已被同事更新，请刷新页面后再保存，避免覆盖对方修改",
+          message: "保存期间云端出现更新，请再次保存以按最新时间写入",
         }, 409);
       }
-      return json({ saved: true, updatedAt, revision: current.revision + 1 });
+      return json({
+        saved: true,
+        updatedAt,
+        revision: current.revision + 1,
+        conflictResolvedByTime: !revisionMatches,
+      });
     }
 
     return json({ message: "Method not allowed" }, 405);
