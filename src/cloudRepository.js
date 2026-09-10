@@ -18,14 +18,22 @@ export async function loadCloudStudio({ signal } = {}) {
   }
   const record = await response.json();
   return record?.payload
-    ? { ...record.payload, updatedAt: record.updatedAt || null }
+    ? {
+        ...record.payload,
+        updatedAt: record.updatedAt || null,
+        revision: Number.isInteger(record.revision) ? record.revision : null,
+      }
     : null;
 }
 
-export async function saveCloudStudio(payload, { signal } = {}) {
+export async function saveCloudStudio(payload, { signal, revision } = {}) {
   const response = await fetch(CLOUD_API_URL, {
     method: "PUT",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...(Number.isInteger(revision) ? { "X-Cloud-Revision": String(revision) } : {}),
+    },
     body: JSON.stringify({ ...payload, version: Date.now() }),
     signal,
   });

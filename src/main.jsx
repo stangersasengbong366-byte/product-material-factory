@@ -145,6 +145,7 @@ function App() {
   );
   const [cloudLoaded, setCloudLoaded] = useState(false);
   const [cloudLoadSettled, setCloudLoadSettled] = useState(!cloudEnabled);
+  const [cloudRevision, setCloudRevision] = useState(null);
   const storedProduct =
     products.find((item) => item.id === selectedProductId) ?? products[0];
   const product = withAnnualLibrary(storedProduct, annualLibrary);
@@ -202,7 +203,8 @@ function App() {
               products: products.map(stripAnnualLibrary),
               annualLibrary: normalizeAnnualLibrary(annualLibrary),
               cardTypes: [...new Set(products.map((item) => item.stage))],
-            }).then(() => {
+            }, { revision: config?.revision }).then((result) => {
+              setCloudRevision(result.revision);
               setSyncState(`本地配置已迁移 · ${products.length} 个产品`);
             });
           }
@@ -217,6 +219,7 @@ function App() {
         );
         setAnnualLibrary(nextAnnualLibrary);
         setProducts(nextProducts);
+        setCloudRevision(config.revision);
         setSelectedProductId((current) =>
           nextProducts.some((item) => item.id === current)
             ? current
@@ -268,11 +271,15 @@ function App() {
   ) => {
     setSyncState("正在保存云端");
     try {
-      await saveCloudStudio({
+      const result = await saveCloudStudio({
         products: nextProducts.map(stripAnnualLibrary),
         annualLibrary: normalizeAnnualLibrary(nextAnnualLibrary),
         cardTypes: [...new Set(nextProducts.map((item) => item.stage))],
-      }, options);
+      }, {
+        ...options,
+        revision: options.revision ?? cloudRevision,
+      });
+      setCloudRevision(result.revision);
       setSyncState(`云端已保存 · ${nextProducts.length} 个产品`);
     } catch (error) {
       setSyncState(`保存失败：${error.message}`);

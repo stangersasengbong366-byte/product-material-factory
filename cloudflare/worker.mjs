@@ -7,7 +7,7 @@ function corsHeaders() {
     // 因此允许跨域访问，让所有使用该工具的同事连接同一份云端配置。
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, PUT, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Accept",
+    "Access-Control-Allow-Headers": "Content-Type, Accept, X-Cloud-Revision",
     "Cache-Control": "no-store",
   };
 }
@@ -38,7 +38,7 @@ export default {
 
     if (request.method === "GET") {
       const record = await env.STUDIO_DB
-        .prepare("SELECT payload, updated_at FROM studio_config WHERE id = ?")
+        .prepare("SELECT payload, updated_at, revision FROM studio_config WHERE id = ?")
         .bind(CONFIG_ID)
         .first();
       if (!record) return json({ message: "云端暂无素材配置" }, 404);
@@ -47,6 +47,7 @@ export default {
         return json({
           payload: JSON.parse(record.payload),
           updatedAt: record.updated_at,
+          revision: record.revision,
         });
       } catch {
         return json({ message: "云端配置数据损坏，请重新保存" }, 500);
@@ -70,16 +71,45 @@ export default {
         return json({ message: "配置中缺少产品列表，已拒绝覆盖云端数据" }, 400);
       }
 
+      const current = await env.STUDIO_DB
+        .prepare("SELECT revision FROM studio_config WHERE id = ?")
+        .bind(CONFIG_ID)
+        .first();
+      const expectedRevision = Number(request.headers.get("X-Cloud-Revision"));
       const updatedAt = new Date().toISOString();
-      await env.STUDIO_DB
+
+      if (!current) {
+        const result = await env.STUDIO_DB
+          .prepare(
+            "INSERT INTO studio_config (id, payload, updated_at, revision) VALUES (?, ?, ?, 1)",
+          )
+          .bind(CONFIG_ID, JSON.stringify(payload), updatedAt)
+          .run();
+        if (!result.success) return json({ message: "云端配置初始化失败，请重试" }, 500);
+        return json({ saved: true, updatedAt, revision: 1 });
+      }
+
+      if (!Number.isInteger(expectedRevision) || expectedRevision !== current.revision) {
+        return json({
+          message: "云端配置已被同事更新，请刷新页面后再保存，避免覆盖对方修改",
+          revision: current.revision,
+        }, 409);
+      }
+
+      const result = await env.STUDIO_DB
         .prepare(
-          `INSERT INTO studio_config (id, payload, updated_at)
-           VALUES (?, ?, ?)
-           ON CONFLICT(id) DO UPDATE SET payload = excluded.payload, updated_at = excluded.updated_at`,
+          `UPDATE studio_config
+           SET payload = ?, updated_at = ?, revision = revision + 1
+           WHERE id = ? AND revision = ?`,
         )
-        .bind(CONFIG_ID, JSON.stringify(payload), updatedAt)
+        .bind(JSON.stringify(payload), updatedAt, CONFIG_ID, expectedRevision)
         .run();
-      return json({ saved: true, updatedAt });
+      if (result.meta.changes !== 1) {
+        return json({
+          message: "云端配置已被同事更新，请刷新页面后再保存，避免覆盖对方修改",
+        }, 409);
+      }
+      return json({ saved: true, updatedAt, revision: current.revision + 1 });
     }
 
     return json({ message: "Method not allowed" }, 405);
