@@ -71,12 +71,12 @@ export default {
         return json({ message: "配置中缺少产品列表，已拒绝覆盖云端数据" }, 400);
       }
 
+      // 云端只保留一份当前配置。每次点击“保存云端”都直接覆盖上一份，
+      // 不保留历史快照，也不因为页面版本较旧而拒绝保存。
       const current = await env.STUDIO_DB
-        .prepare("SELECT payload, revision FROM studio_config WHERE id = ?")
+        .prepare("SELECT revision FROM studio_config WHERE id = ?")
         .bind(CONFIG_ID)
         .first();
-      const expectedRevision = Number(request.headers.get("X-Cloud-Revision"));
-      const incomingVersion = Number(payload.version);
       const updatedAt = new Date().toISOString();
 
       if (!current) {
@@ -90,43 +90,21 @@ export default {
         return json({ saved: true, updatedAt, revision: 1 });
       }
 
-      let savedVersion = null;
-      try {
-        savedVersion = Number(JSON.parse(current.payload).version);
-      } catch {
-        // 兼容早期没有版本号的云端记录：后续这次保存会补齐版本号。
-      }
-      const incomingIsNewer =
-        Number.isFinite(incomingVersion) &&
-        (!Number.isFinite(savedVersion) || incomingVersion > savedVersion);
-      const revisionMatches =
-        Number.isInteger(expectedRevision) && expectedRevision === current.revision;
-
-      if (!revisionMatches && !incomingIsNewer) {
-        return json({
-          message: "云端已有更新更晚的版本，已保留最新版，请刷新页面查看",
-          revision: current.revision,
-        }, 409);
-      }
-
       const result = await env.STUDIO_DB
         .prepare(
           `UPDATE studio_config
            SET payload = ?, updated_at = ?, revision = revision + 1
-           WHERE id = ? AND revision = ?`,
+           WHERE id = ?`,
         )
-        .bind(JSON.stringify(payload), updatedAt, CONFIG_ID, current.revision)
+        .bind(JSON.stringify(payload), updatedAt, CONFIG_ID)
         .run();
       if (result.meta.changes !== 1) {
-        return json({
-          message: "保存期间云端出现更新，请再次保存以按最新时间写入",
-        }, 409);
+        return json({ message: "云端配置更新失败，请重试" }, 500);
       }
       return json({
         saved: true,
         updatedAt,
         revision: current.revision + 1,
-        conflictResolvedByTime: !revisionMatches,
       });
     }
 
