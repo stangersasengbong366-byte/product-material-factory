@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
+import JSZip from "jszip";
+import html2canvas from "html2canvas";
 import { formatCourseDate } from "./dateFormat.js";
 import { livePageKey, liveRowKey, updateLiveTemplateOverride } from "./liveTemplate.js";
 import {
@@ -343,10 +345,6 @@ function App() {
     setSyncState(`正在批量生成 · 0/${downloadableTasks.length}`);
     const previousTaskId = activeTaskId;
     try {
-      const [{ default: JSZip }, { default: html2canvas }] = await Promise.all([
-        import("jszip"),
-        import("html2canvas"),
-      ]);
       const zip = new JSZip();
       const folder = zip.folder(sanitizeFilenamePart(product.name));
       for (const [index, task] of downloadableTasks.entries()) {
@@ -2608,7 +2606,6 @@ function countParsed(data, type) {
   );
 }
 async function renderPoster(element) {
-  const { default: html2canvas } = await import("html2canvas");
   return renderPosterWith(html2canvas, element);
 }
 async function renderPosterWith(html2canvas, element) {
