@@ -5,11 +5,12 @@ const CLOUD_API_URL =
 export const cloudEnabled = true;
 export const cloudProviderName = "Cloudflare";
 
-export async function loadCloudStudio() {
+export async function loadCloudStudio({ signal } = {}) {
   const response = await fetch(CLOUD_API_URL, {
     method: "GET",
     headers: { Accept: "application/json" },
     cache: "no-store",
+    signal,
   });
   if (response.status === 404) return null;
   if (!response.ok) {
@@ -21,11 +22,12 @@ export async function loadCloudStudio() {
     : null;
 }
 
-export async function saveCloudStudio(payload) {
+export async function saveCloudStudio(payload, { signal } = {}) {
   const response = await fetch(CLOUD_API_URL, {
     method: "PUT",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({ ...payload, version: Date.now() }),
+    signal,
   });
   if (!response.ok) {
     throw new Error(await errorMessage(response, "Cloudflare 云端配置保存失败"));

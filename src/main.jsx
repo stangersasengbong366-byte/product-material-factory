@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { formatCourseDate } from "./dateFormat.js";
+import { livePageKey, liveRowKey, updateLiveTemplateOverride } from "./liveTemplate.js";
 import {
   CloudUpload,
   Download,
@@ -142,6 +143,8 @@ function App() {
   const [syncState, setSyncState] = useState(
     cloudEnabled ? `正在读取 ${cloudProviderName}` : "未连接云端存储",
   );
+  const [cloudLoaded, setCloudLoaded] = useState(false);
+  const [cloudLoadSettled, setCloudLoadSettled] = useState(!cloudEnabled);
   const storedProduct =
     products.find((item) => item.id === selectedProductId) ?? products[0];
   const product = withAnnualLibrary(storedProduct, annualLibrary);
@@ -189,8 +192,9 @@ function App() {
 
   useEffect(() => {
     if (!cloudEnabled) return;
-    loadCloudStudio()
+    loadCloudStudio({ signal: AbortSignal.timeout(15000) })
       .then((config) => {
+        setCloudLoaded(true);
         if (!config?.products?.length) {
           if (window.location.hostname === "localhost") {
             setSyncState(`正在迁移本地配置到 ${cloudProviderName}`);
@@ -220,7 +224,8 @@ function App() {
         );
         setSyncState(`云端已同步 · ${nextProducts.length} 个产品`);
       })
-      .catch((error) => setSyncState(`云端读取失败：${error.message}`));
+      .catch((error) => setSyncState(`云端读取失败：${error.name === "TimeoutError" ? "连接超时" : error.message}`))
+      .finally(() => setCloudLoadSettled(true));
   }, []);
 
   useEffect(() => {
@@ -259,6 +264,7 @@ function App() {
   const saveAllToCloud = async (
     nextProducts = products,
     nextAnnualLibrary = annualLibrary,
+    options = {},
   ) => {
     setSyncState("正在保存云端");
     try {
@@ -266,7 +272,7 @@ function App() {
         products: nextProducts.map(stripAnnualLibrary),
         annualLibrary: normalizeAnnualLibrary(nextAnnualLibrary),
         cardTypes: [...new Set(nextProducts.map((item) => item.stage))],
-      });
+      }, options);
       setSyncState(`云端已保存 · ${nextProducts.length} 个产品`);
     } catch (error) {
       setSyncState(`保存失败：${error.message}`);
@@ -487,6 +493,8 @@ function App() {
             exportState={exportState}
             onUpdateProduct={updateProduct}
             onSaveCloud={saveAllToCloud}
+            cloudLoaded={cloudLoaded}
+            cloudLoadSettled={cloudLoadSettled}
           />
         )}
         {activeNav === "courses" && (
@@ -535,7 +543,12 @@ function TaskWorkspace({
   exportState,
   onUpdateProduct,
   onSaveCloud,
+  cloudLoaded,
+  cloudLoadSettled,
 }) {
+  const [liveEditing, setLiveEditing] = useState(false);
+  const [liveSaving, setLiveSaving] = useState(false);
+  const [liveMessage, setLiveMessage] = useState("");
   const [giftEditing, setGiftEditing] = useState(false);
   const [giftSaving, setGiftSaving] = useState(false);
   const [priceEditing, setPriceEditing] = useState(false);
@@ -557,10 +570,40 @@ function TaskWorkspace({
     ]),
   );
   useEffect(() => {
+    setLiveEditing(false);
+    setLiveMessage("");
     setGiftEditing(false);
     setPriceEditing(false);
     setVideoEditing(false);
   }, [activeTaskId, product.id]);
+  const updateLiveCopy = (change) => {
+    if (activeTask?.type !== "学法直播") return;
+    try {
+      onUpdateProduct({
+        ...product,
+        liveTemplateOverride: updateLiveTemplateOverride(
+          product.liveTemplateOverride,
+          { ...change, pageKey: livePageKey(product, activeTask.subject) },
+        ),
+      });
+      setLiveMessage("修改已保存到本机，下载将使用修改后的内容；共享给同事请保存云端。");
+    } catch (error) {
+      setLiveMessage(`本机保存失败：${error.message}。请先下载素材保留修改。`);
+    }
+  };
+  const saveLiveCopy = async () => {
+    if (!cloudLoaded || liveSaving) return;
+    setLiveSaving(true);
+    setLiveMessage("正在保存云端…");
+    try {
+      await onSaveCloud(undefined, undefined, { signal: AbortSignal.timeout(15000) });
+      setLiveMessage("母版已保存云端，同事刷新页面后可读取。");
+    } catch (error) {
+      setLiveMessage(`云端保存失败${error.name === "TimeoutError" ? "：连接超时" : `：${error.message}`}。本机修改仍保留，可继续下载 PNG。`);
+    } finally {
+      setLiveSaving(false);
+    }
+  };
   const updateGiftCopy = (patch) => {
     if (activeTask?.type !== "赠课") return;
     const templatePatch = Object.fromEntries(
@@ -718,10 +761,30 @@ function TaskWorkspace({
           <div className="preview-toolbar">
             <div>
               <Eye size={17} />
-              <span>{activeTask?.type === "赠课" ? "赠课母版预览" : activeTask?.type === "价格" ? "价格母版预览" : activeTask?.type === "知识视频" ? "知识视频母版预览" : "素材预览"}</span>
+              <span>{activeTask?.type === "赠课" ? "赠课母版预览" : activeTask?.type === "价格" ? "价格母版预览" : activeTask?.type === "知识视频" ? "知识视频母版预览" : activeTask?.type === "学法直播" ? "学法直播母版预览" : "素材预览"}</span>
               <em>{activeTask?.type === "赠课" ? "自动同步全部学科" : activeTask?.type === "价格" ? "自动同步全部价格素材" : activeTask?.type === "知识视频" ? "顶部母版同步，课程内容按当前素材保存" : product.name}</em>
             </div>
             <div className="preview-actions">
+            {activeTask?.type === "学法直播" && rows.length > 0 ? (
+              <>
+                <button
+                  className={liveEditing ? "active" : ""}
+                  aria-pressed={liveEditing}
+                  onClick={() => setLiveEditing((value) => !value)}
+                  disabled={exportState !== "idle" || liveSaving || !cloudLoadSettled}
+                >
+                  {liveEditing ? "完成编辑" : "编辑母版"}
+                </button>
+                <button
+                  onClick={saveLiveCopy}
+                  disabled={liveSaving || !cloudLoaded || exportState !== "idle"}
+                  title={!cloudLoaded ? "云端尚未连接，修改可保存在本机并下载" : "保存当前产品的母版修改到云端"}
+                >
+                  {liveSaving ? <LoaderCircle className="spin" size={16} /> : <Save size={16} />}
+                  保存云端
+                </button>
+              </>
+            ) : null}
             {activeTask?.type === "赠课" ? (
               <>
                 <button className={giftEditing ? "active" : ""} onClick={() => setGiftEditing((value) => !value)}>
@@ -768,6 +831,14 @@ function TaskWorkspace({
             </button>
             </div>
           </div>
+          {activeTask?.type === "学法直播" && rows.length > 0 ? (
+            <div className="live-edit-help">
+              <span>{liveEditing
+                ? "点击虚线框编辑，按回车或点击空白处保存。标题、说明、表头应用于本产品全部学科；课时、日期、序号、课名只修改当前科目。"
+                : "点击“编辑母版”，可直接修改预览中的文字、课时、上课时间、日期和课程内容。"}</span>
+              <span role="status">{liveMessage || (!cloudLoadSettled ? "正在读取云端配置，读取结束后可编辑。" : !cloudLoaded ? "云端尚未连接；可先编辑并下载，暂不能共享给同事。" : "")}</span>
+            </div>
+          ) : null}
           <div className="preview-canvas">
             <div className="material-scale">
               {activeTask?.type === "学法直播" && !rows.length ? (
@@ -776,6 +847,8 @@ function TaskWorkspace({
                 </div>
               ) : activeTask ? (
                 renderTaskPoster(activeTask, product, rows, posterRef, {
+                  liveEditing: liveEditing && !liveSaving && exportState === "idle",
+                  onLiveCopyChange: updateLiveCopy,
                   giftEditing,
                   onGiftCopyChange: updateGiftCopy,
                   priceEditing,
@@ -1669,6 +1742,8 @@ function renderTaskPoster(task, product, rows, ref, options = {}) {
         product={product}
         subject={task.subject}
         rows={rows}
+        editable={options.liveEditing}
+        onChange={options.onLiveCopyChange}
       />
     );
   if (task.type === "知识视频")
@@ -1820,9 +1895,48 @@ const PricePoster = React.forwardRef(function PricePoster({ product, quoteMode =
   );
 });
 const LivePoster = React.forwardRef(function LivePoster(
-  { product, subject, rows },
+  { product, subject, rows, editable = false, onChange },
   ref,
 ) {
+  const override = product.liveTemplateOverride || {};
+  const page = override.pages?.[livePageKey(product, subject)] || {};
+  const copy = {
+    titleGrade: `${product.grade}年级`,
+    titleProduct: `${product.stage}・学法精讲`,
+    contentTitle: "课程内容",
+    headline: "清北毕业名师直播2小时传授解题大招",
+    subheadline: "同步校内进度+讲练结合",
+    featureExam: "真题解读",
+    featureBank: "知识题库",
+    featureClass: "小班教学",
+    featureNotes: "学法讲义",
+    timeLabel: "上课时间",
+    dateHeader: "上课日期",
+    noHeader: "序号",
+    courseHeader: "课程内容",
+    ...override,
+  };
+  const field = (as, label, value, onCommit, className = "", normalizeValue) => (
+    <PosterEditable
+      as={as}
+      className={className}
+      editClassName="live-editable"
+      label={label}
+      editable={editable}
+      allowEmpty
+      value={value}
+      onCommit={onCommit}
+      normalizeValue={normalizeValue}
+    />
+  );
+  const templateField = (as, key, label) =>
+    field(as, label, copy[key], (value) =>
+      onChange?.({ scope: "template", patch: { [key]: value } }),
+    );
+  const pageField = (as, key, fallback, label, className) =>
+    field(as, label, page[key] ?? fallback, (value) =>
+      onChange?.({ scope: "page", patch: { [key]: value } }), className,
+    );
   const groups = groupLiveRows(rows, product.coverageQuarters);
   const multi = groups.length > 1;
   const gradeTheme = gradeThemeKey(product.grade);
@@ -1837,57 +1951,75 @@ const LivePoster = React.forwardRef(function LivePoster(
       }}
     >
       <img className="figma-live-logo" src={assetUrl("figma-assets/live-logo.png")} />
-      <div className="figma-live-subject">{subject}</div>
+      {pageField("div", "subject", subject, "当前素材科目名称", "figma-live-subject")}
       <div className="figma-live-title">
-        <span>{product.grade}年级</span>
-        <h2>{product.stage}・学法精讲</h2>
+        {templateField("span", "titleGrade", "母版年级标题")}
+        {templateField("h2", "titleProduct", "母版产品标题")}
       </div>
       <section className="figma-live-content">
-        <h3>课程内容</h3>
+        {templateField("h3", "contentTitle", "母版内容区标题")}
         <div className="figma-live-intro">
           <div>
-            <b>{rows.length}学时</b>
-            <strong>清北毕业名师直播2小时传授解题大招</strong>
-            <span>同步校内进度+讲练结合</span>
+            {pageField("b", "lessonLabel", `${rows.length}学时`, "当前素材课时数")}
+            {templateField("strong", "headline", "母版直播说明")}
+            {templateField("span", "subheadline", "母版补充说明")}
           </div>
           <div className="figma-feature-list">
             {[
-              ["live-feature-exam.png", "真题解读"],
-              ["live-feature-bank.png", "知识题库"],
-              ["live-feature-class.png", "小班教学"],
-              ["live-feature-notes.png", "学法讲义"],
-            ].map(([src, label]) => (
-              <div key={label}>
+              ["live-feature-exam.png", "featureExam", "母版真题解读文案"],
+              ["live-feature-bank.png", "featureBank", "母版知识题库文案"],
+              ["live-feature-class.png", "featureClass", "母版小班教学文案"],
+              ["live-feature-notes.png", "featureNotes", "母版学法讲义文案"],
+            ].map(([src, key, label]) => (
+              <div key={key}>
                 <img src={assetUrl(`figma-assets/${src}`)} />
-                <span>{label}</span>
+                {templateField("span", key, label)}
               </div>
             ))}
           </div>
         </div>
         <div className="figma-live-stage-list">
-          {groups.map((group) => (
+          {groups.map((group) => {
+            const stage = page.stages?.[group.quarter] || {};
+            const stageField = (as, key, fallback, label) =>
+              field(as, label, stage[key] ?? fallback, (value) =>
+                onChange?.({ scope: "stage", quarter: group.quarter, patch: { [key]: value } }),
+              );
+            return (
             <section className="figma-live-stage" key={group.quarter}>
               <div className="figma-live-period">
-                <strong>{group.quarter}</strong>
-                <span>上课时间</span>
-                <b>{formatStageTimes(group.rows)}</b>
+                {stageField("strong", "label", group.quarter, `${group.quarter}阶段名称`)}
+                {templateField("span", "timeLabel", `${group.quarter}上课时间表头`)}
+                {stageField("b", "time", formatStageTimes(group.rows), `${group.quarter}上课时间`)}
               </div>
               <div className="figma-live-head">
-                <span>上课日期</span>
-                <span>序号</span>
-                <span>课程内容</span>
+                {templateField("span", "dateHeader", `${group.quarter}日期表头`)}
+                {templateField("span", "noHeader", `${group.quarter}序号表头`)}
+                {templateField("span", "courseHeader", `${group.quarter}课程内容表头`)}
               </div>
               <div className="figma-live-rows">
-                {group.rows.map((row, index) => (
-                  <p key={`${group.quarter}-${row.id ?? row.no ?? index}`}>
-                    <span>{formatCourseDate(row.date) || "以排课为准"}</span>
-                    <span>{index + 1}</span>
-                    <strong>{row.title || row.live}</strong>
+                {group.rows.map((row, index) => {
+                  const rowKey = liveRowKey(row, index);
+                  const rowCopy = stage.rows?.[rowKey] || {};
+                  const rowField = (as, key, fallback, label) =>
+                    field(as, `${group.quarter}第${index + 1}课${label}`, rowCopy[key] ?? fallback, (value) =>
+                      onChange?.({
+                        scope: "row", quarter: group.quarter, rowKey,
+                        patch: { [key]: key === "date" ? formatCourseDate(value) : value },
+                      }), "", key === "date" ? formatCourseDate : undefined,
+                    );
+                  return (
+                  <p key={rowKey}>
+                    {rowField("span", "date", formatCourseDate(row.date) || "以排课为准", "上课日期")}
+                    {rowField("span", "no", index + 1, "序号")}
+                    {rowField("strong", "title", row.title || row.live, "课程内容")}
                   </p>
-                ))}
+                  );
+                })}
               </div>
             </section>
-          ))}
+            );
+          })}
         </div>
       </section>
     </article>
@@ -2371,23 +2503,33 @@ function toChineseLesson(value) {
 function PosterEditable({
   as: Tag = "span",
   className = "",
+  editClassName = "video-editable",
+  label,
   editable = false,
+  allowEmpty = false,
   value,
   onCommit,
+  normalizeValue,
 }) {
   const finishOnEnter = (event) => {
-    if (event.key !== "Enter") return;
+    if (event.key !== "Enter" || event.nativeEvent.isComposing || event.keyCode === 229) return;
     event.preventDefault();
     event.currentTarget.blur();
   };
   const commit = (event) => {
-    const next = event.currentTarget.textContent.trim();
-    if (next) onCommit?.(next);
+    const text = event.currentTarget.textContent.trim();
+    const next = normalizeValue ? normalizeValue(text) : text;
+    if (next || allowEmpty) {
+      if (event.currentTarget.textContent !== next) event.currentTarget.textContent = next;
+      if (next !== String(value ?? "")) onCommit?.(next);
+    }
     else event.currentTarget.textContent = String(value ?? "");
   };
   return (
     <Tag
-      className={`${className} ${editable ? "video-editable" : ""}`.trim()}
+      className={`${className} ${editable ? editClassName : ""}`.trim()}
+      role={editable && label ? "textbox" : undefined}
+      aria-label={editable ? label : undefined}
       contentEditable={editable}
       suppressContentEditableWarning
       onKeyDown={finishOnEnter}

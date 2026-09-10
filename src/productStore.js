@@ -1,5 +1,6 @@
 import { demoProduct } from "./data/demoProduct.js";
 import { COURSE_SUBJECTS } from "./courseSubjects.js";
+import { normalizeLiveTemplateOverride } from "./liveTemplate.js";
 
 const STORAGE_KEY = "youdao-course-material-studio-product-v1";
 
@@ -34,6 +35,7 @@ export function normalizeProduct(input) {
     liveImportSummary: input?.liveImportSummary || null,
     liveImportIgnoredRows: Number(input?.liveImportIgnoredRows || 0),
     live: normalizeLive(input?.live || input?.parsedCourseData?.live || {}),
+    liveTemplateOverride: normalizeLiveTemplateOverride(input?.liveTemplateOverride),
     videoTrack: normalizeVideoTrack(input?.videoTrack || "目标班"),
     videoLibrary: normalizeVideoLibrary(input?.videoLibrary || {}),
     videoImportSummary: input?.videoImportSummary || null,
