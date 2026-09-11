@@ -317,3 +317,50 @@ test("目标班与菁英班分 Sheet 时分别保留专属课程和原表顺序"
   assert.equal(autumn.targetLessons, 2);
   assert.equal(autumn.eliteLessons, 2);
 });
+
+test("知识视频向下继承合并班型，避免高三专属课混入通用课", async () => {
+  const workbook = XLSX.utils.book_new();
+  const sheet = XLSX.utils.aoa_to_sheet([
+    [
+      "模块",
+      "视频大纲",
+      "是否分层",
+      "（1星/2星/3星/4星）",
+      "（夏/秋/冬/春）",
+    ],
+    ["直线运动", "目标班第一课", "目标班专属", "1星", "一轮"],
+    ["", "目标班第二课", "", "2星", "一轮"],
+    ["", "通用课", "否", "2星", "一轮"],
+    ["", "菁英班第一课", "菁英班专属", "3星", "一轮"],
+    ["", "菁英班第二课", "", "4星", "一轮"],
+  ]);
+  sheet["!merges"] = [
+    { s: { r: 1, c: 2 }, e: { r: 2, c: 2 } },
+    { s: { r: 4, c: 2 }, e: { r: 5, c: 2 } },
+  ];
+  XLSX.utils.book_append_sheet(workbook, sheet, "高三-物理");
+  const buffer = XLSX.write(workbook, { type: "array", bookType: "xlsx" });
+  const parsed = await parseCourseWorkbook(
+    {
+      name: "高三物理双班型合并单元格.xlsx",
+      async arrayBuffer() {
+        return buffer;
+      },
+    },
+    "video",
+  );
+  const product = {
+    grade: "高三",
+    coverageQuarters: ["秋季"],
+    videoLibrary: parsed.library,
+  };
+
+  assert.deepEqual(
+    getVideoRows(product, "物理", "目标班").map((row) => row.title),
+    ["目标班第一课", "目标班第二课", "通用课"],
+  );
+  assert.deepEqual(
+    getVideoRows(product, "物理", "菁英班").map((row) => row.title),
+    ["通用课", "菁英班第一课", "菁英班第二课"],
+  );
+});

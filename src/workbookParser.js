@@ -307,6 +307,7 @@ function parseVideo(rows) {
     }
     let currentModule = "";
     let currentScoreShare = "";
+    let currentLayerValue = "";
     const stageRows = {};
     sheetRows.forEach((row, sourceIndex) => {
       const moduleValue = pickExact(row, "模块");
@@ -333,7 +334,14 @@ function parseVideo(rows) {
       const layerValue =
         pickExact(row, "是否分层") ||
         pick(row, ["班型", "层次", "分层", "视频班型"]);
-      const bucket = resolveVideoBucket(layerValue, title, sheetName);
+      // 班型列和模块分值一样常被纵向合并：只有合并区首行有值。
+      // 空白行沿用本区间的班型，避免把目标/菁英专属课误判为通用课。
+      if (layerValue) currentLayerValue = layerValue;
+      const bucket = resolveVideoBucket(
+        currentLayerValue,
+        title,
+        sheetName,
+      );
       const item = {
         sourceOrder: sourceIndex,
         no:
