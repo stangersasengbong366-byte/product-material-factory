@@ -57,6 +57,23 @@ export function normalizeProduct(input) {
   };
 }
 
+// 上传新底表时，课程行必须以新解析结果为准。保留海报的文案和版式设置，
+// 仅清除按旧课程顺序保存的逐行修改，避免旧班型内容覆盖新班型课程。
+export function clearVideoPageRowOverrides(value = {}) {
+  if (!value || typeof value !== "object") return {};
+  if (!value.pages || typeof value.pages !== "object") return value;
+  return {
+    ...value,
+    pages: Object.fromEntries(
+      Object.entries(value.pages).map(([key, page = {}]) => {
+        if (!page || typeof page !== "object") return [key, page];
+        const { rows, ...pageSettings } = page;
+        return [key, pageSettings];
+      }),
+    ),
+  };
+}
+
 function normalizeGiftTemplateOverride(value = {}) {
   return {
     ...(value?.name ? { name: String(value.name) } : {}),

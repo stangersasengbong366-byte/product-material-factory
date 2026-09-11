@@ -25,6 +25,7 @@ import { demoProduct } from "./data/demoProduct";
 import { COURSE_SUBJECTS } from "./courseSubjects";
 import {
   buildMaterialTasks,
+  clearVideoPageRowOverrides,
   getLiveRows,
   getVideoRows,
   inferCoverageQuarters,
@@ -920,6 +921,9 @@ function CourseConfig({
                 videoLibrary: parsed.library,
                 videoImportSummary: parsed.summary,
                 videoImportIgnoredRows: parsed.ignoredRows,
+                videoTemplateOverride: clearVideoPageRowOverrides(
+                  draft.videoTemplateOverride,
+                ),
                 uploadNames: { ...draft.uploadNames, video: file.name },
               }
             : { ...draft, gifts: parsed, uploadNames: productNames };
@@ -947,7 +951,7 @@ function CourseConfig({
         type === "live"
           ? `${file.name} 已形成全年库：识别 ${parsed.summary.subjects.join("、")}，共 ${parsed.summary.cells.length} 个年级/阶段、${parsed.summary.lessonRows} 节课${parsed.summary.missingSubjects?.length ? `；未识别科目：${parsed.summary.missingSubjects.join("、")}` : "；9 个科目均已识别"}`
           : type === "video"
-            ? `${file.name} 已形成知识视频库：${parsed.summary.grades.length} 个年级 × ${parsed.summary.subjects.length} 个科目，${parsed.summary.cells.length} 个阶段单元`
+            ? `${file.name} 已形成知识视频库：${parsed.summary.grades.length} 个年级 × ${parsed.summary.subjects.length} 个科目，${parsed.summary.cells.length} 个阶段单元；课程海报内容已按新底表刷新`
             : `${file.name} 已解析：${countParsed(parsed, type)} 条课程`,
       );
     } catch (error) {
