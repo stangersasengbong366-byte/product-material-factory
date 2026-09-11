@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   buildMaterialTasks,
+  clearVideoPageRowOverrides,
   getVideoRows,
   normalizeProduct,
 } from "../src/productStore.js";
@@ -225,4 +226,23 @@ test("知识视频历史主理人文案统一升级为清北毕业主理人", ()
     product.videoTemplateOverride.adviceLines[0],
     "清北毕业主理人建议按模块学习",
   );
+});
+
+test("上传新知识视频底表时清除旧课程行覆盖并保留海报文案", () => {
+  const cleared = clearVideoPageRowOverrides({
+    headline: "可保留的主标题",
+    pages: {
+      "数学::菁英班": {
+        subject: "数学",
+        track: "菁英班",
+        rows: [{ no: "1", title: "此前错误课程" }],
+      },
+    },
+  });
+
+  assert.equal(cleared.headline, "可保留的主标题");
+  assert.deepEqual(cleared.pages["数学::菁英班"], {
+    subject: "数学",
+    track: "菁英班",
+  });
 });
