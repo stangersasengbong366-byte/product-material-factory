@@ -200,6 +200,7 @@ function parseLive(rows) {
       ] ||= []);
       list.push({
         no: list.length + 1,
+        sourceOrder: Number(row.__sourceRow || 0),
         grade,
         subject,
         quarter,

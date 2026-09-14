@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   buildMaterialTasks,
   clearVideoPageRowOverrides,
+  getLiveRows,
   getVideoRows,
   normalizeProduct,
 } from "../src/productStore.js";
@@ -93,6 +94,63 @@ test("高三存在二轮底表时自动纳入春季，目标与菁英班均为�
   assert.deepEqual(product.coverageQuarters, ["秋季", "春季"]);
   assert.equal(getVideoRows(product, "数学", "目标班").length, 4);
   assert.equal(getVideoRows(product, "数学", "菁英班").length, 4);
+});
+
+test("三类产品分别使用正确的直播与知识视频阶段", () => {
+  const liveStage = (prefix, count, startOrder = 0) => ({
+    一期: Array.from({ length: count }, (_, index) => ({
+      no: index + 1,
+      title: `${prefix}${index + 1}`,
+      sourceOrder: startOrder + index,
+    })),
+  });
+  const videoStage = (prefix, count, startOrder = 0) => {
+    const rows = Array.from({ length: count }, (_, index) => ({
+      no: index + 1,
+      title: `${prefix}${index + 1}`,
+      bucket: "common",
+      sourceOrder: startOrder + index,
+    }));
+    return { orderedByTrack: { target: rows, elite: rows } };
+  };
+  const libraries = {
+    liveLibrary: {
+      高三: {
+        数学: {
+          暑期: {
+            一期: liveStage("暑", 10, 2).一期,
+            早鸟期: liveStage("暑期补充", 2, 0).一期,
+          },
+          秋季: liveStage("秋", 16),
+          寒假: liveStage("寒", 10),
+          春季: liveStage("春", 8),
+        },
+      },
+    },
+    videoLibrary: {
+      高三: {
+        数学: {
+          秋季: videoStage("一轮", 60, 0),
+          春季: videoStage("二轮", 60, 60),
+        },
+      },
+    },
+  };
+  const product = normalizeProduct({
+    id: "g3-entitlement",
+    name: "高三名校直通卡",
+    grade: "高三",
+    stage: "名校直通卡",
+    coverageQuarters: ["秋季", "春季"],
+    ...libraries,
+  });
+
+  assert.equal(getLiveRows(product, "数学").length, 30);
+  assert.deepEqual(
+    getLiveRows(product, "数学").slice(0, 2).map((row) => row.title),
+    ["暑期补充1", "暑期补充2"],
+  );
+  assert.equal(getVideoRows(product, "数学", "目标班").length, 120);
 });
 
 test("知识视频按上传表格原始行顺序展示，不按阶段重新分块", () => {

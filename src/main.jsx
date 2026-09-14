@@ -1793,17 +1793,19 @@ function priceTotalLessons(product) {
 function effectivePriceHours(product) {
   const configuredKnowledge = Number(product?.priceConfig?.knowledgeHours || 0);
   const configuredLive = Number(product?.priceConfig?.liveHours || 0);
-  const quarters = product?.coverageQuarters || [];
-  const liveRules = { 暑期: 10, 秋季: 16, 寒假: 10, 春季: 16 };
+  const courseSubjects = Object.keys(
+    product?.videoLibrary?.[product?.grade] || {},
+  );
+  const referenceSubject = courseSubjects.includes("数学")
+    ? "数学"
+    : courseSubjects.find((subject) => !["政治", "历史", "地理"].includes(subject));
+  const knowledgeRows = referenceSubject
+    ? getVideoRows(product, referenceSubject, "目标班")
+    : [];
+  const liveRows = referenceSubject ? getLiveRows(product, referenceSubject) : [];
   return {
-    knowledge:
-      configuredKnowledge ||
-      (quarters.some((quarter) => quarter === "秋季" || quarter === "春季")
-        ? 40
-        : 0),
-    live:
-      configuredLive ||
-      quarters.reduce((sum, quarter) => sum + (liveRules[quarter] || 0), 0),
+    knowledge: configuredKnowledge || knowledgeRows.length,
+    live: configuredLive || liveRows.length,
   };
 }
 
