@@ -403,7 +403,7 @@ export function getVideoRows(
   const resolvedTrack = normalizedTrack === "通用版" ? "目标班" : normalizedTrack;
   if (!subjectLibrary) return product?.video?.[subject]?.[resolvedTrack] || [];
   const bucket = resolvedTrack === "菁英班" ? "elite" : "target";
-  const rows = (product.coverageQuarters || []).flatMap((quarter) => {
+  const rows = (product.coverageQuarters || []).flatMap((quarter, quarterIndex) => {
     const stage = subjectLibrary[quarter];
     if (!stage) return [];
     const allowedBuckets = new Set(["common", "layered", bucket]);
@@ -428,9 +428,23 @@ export function getVideoRows(
         sourceNo: row.no,
         quarter,
         track: normalizedTrack,
+        quarterIndex,
       }));
   });
-  return rows.map((row, index) => ({ ...row, no: index + 1 }));
+  // The workbook may interleave first- and second-round rows. Keep its original
+  // row order after track filtering instead of concatenating by course stage.
+  rows.sort((left, right) => {
+    const leftOrder = Number(left.sourceOrder);
+    const rightOrder = Number(right.sourceOrder);
+    const hasLeftOrder = Number.isFinite(leftOrder);
+    const hasRightOrder = Number.isFinite(rightOrder);
+    if (hasLeftOrder && hasRightOrder && leftOrder !== rightOrder) {
+      return leftOrder - rightOrder;
+    }
+    if (hasLeftOrder !== hasRightOrder) return hasLeftOrder ? -1 : 1;
+    return left.quarterIndex - right.quarterIndex;
+  });
+  return rows.map(({ quarterIndex, ...row }, index) => ({ ...row, no: index + 1 }));
 }
 
 function sameVideoOutline(left, right) {

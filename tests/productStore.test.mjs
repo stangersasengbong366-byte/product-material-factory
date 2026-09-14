@@ -95,6 +95,50 @@ test("高三存在二轮底表时自动纳入春季，目标与菁英班均为�
   assert.equal(getVideoRows(product, "数学", "菁英班").length, 4);
 });
 
+test("知识视频按上传表格原始行顺序展示，不按阶段重新分块", () => {
+  const row = (title, bucket, sourceOrder) => ({
+    no: sourceOrder + 1,
+    title,
+    bucket,
+    sourceOrder,
+    module: "数学",
+  });
+  const autumn = [
+    row("一轮第 1 行", "common", 0),
+    row("一轮第 4 行", "target", 3),
+  ];
+  const spring = [
+    row("二轮第 2 行", "common", 1),
+    row("二轮第 3 行", "target", 2),
+  ];
+  const product = {
+    grade: "高三",
+    coverageQuarters: ["秋季", "春季"],
+    videoLibrary: {
+      高三: {
+        数学: {
+          秋季: { orderedByTrack: { target: autumn } },
+          春季: { orderedByTrack: { target: spring } },
+        },
+      },
+    },
+  };
+
+  assert.deepEqual(
+    getVideoRows(product, "数学", "目标班").map((item) => [
+      item.no,
+      item.sourceNo,
+      item.title,
+    ]),
+    [
+      [1, 1, "一轮第 1 行"],
+      [2, 2, "二轮第 2 行"],
+      [3, 3, "二轮第 3 行"],
+      [4, 4, "一轮第 4 行"],
+    ],
+  );
+});
+
 test("学法直播全年库缺科时仍展示生物待补充任务", () => {
   const product = normalizeProduct({
     id: "live-subjects",
