@@ -56,6 +56,45 @@ test("知识视频产出合并产品覆盖的秋季与寒假课程", () => {
   );
 });
 
+test("高三存在二轮底表时自动纳入春季，目标与菁英班均为一二轮总课时", () => {
+  const targetRow = { no: 2, title: "一轮目标课", bucket: "target" };
+  const eliteRow = { no: 3, title: "一轮菁英课", bucket: "elite" };
+  const commonRow = { no: 1, title: "一轮通用课", bucket: "common" };
+  const makeStage = (prefix) => ({
+    common: [{ ...commonRow, title: `${prefix}通用课` }],
+    target: [{ ...targetRow, title: `${prefix}目标课` }],
+    elite: [{ ...eliteRow, title: `${prefix}菁英课` }],
+    layered: [],
+    orderedByTrack: {
+      target: [
+        { ...commonRow, title: `${prefix}通用课` },
+        { ...targetRow, title: `${prefix}目标课` },
+      ],
+      elite: [
+        { ...commonRow, title: `${prefix}通用课` },
+        { ...eliteRow, title: `${prefix}菁英课` },
+      ],
+    },
+  });
+  const product = normalizeProduct({
+    id: "g3-rounds",
+    name: "名校直通卡",
+    grade: "高三",
+    stage: "名校直通卡",
+    coverageQuarters: ["秋季"],
+    live: {},
+    gifts: {},
+    priceConfig: { enabled: false },
+    videoLibrary: {
+      高三: { 数学: { 秋季: makeStage("一轮"), 春季: makeStage("二轮") } },
+    },
+  });
+
+  assert.deepEqual(product.coverageQuarters, ["秋季", "春季"]);
+  assert.equal(getVideoRows(product, "数学", "目标班").length, 4);
+  assert.equal(getVideoRows(product, "数学", "菁英班").length, 4);
+});
+
 test("学法直播全年库缺科时仍展示生物待补充任务", () => {
   const product = normalizeProduct({
     id: "live-subjects",

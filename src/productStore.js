@@ -19,15 +19,30 @@ export function saveProduct(product) {
 }
 
 export function normalizeProduct(input) {
-  const coverageQuarters = sortCourseQuarters(
+  const grade = String(input?.grade || "未设置年级");
+  const requestedQuarters = sortCourseQuarters(
     Array.isArray(input?.coverageQuarters) && input.coverageQuarters.length
       ? input.coverageQuarters
       : inferCoverageQuarters(input?.stage),
   );
+  // 高三底表将一轮、二轮分别映射到秋季、春季。旧配置中“名校直通卡”
+  // 只保存了秋季时，会遗漏完整二轮，导致目标/菁英班各只统计到 60 节。
+  // 仅在该产品的全年库确实存在二轮内容时补齐春季，不影响只配置单阶段的产品。
+  const hasSecondRound = Object.values(input?.videoLibrary?.[grade] || {}).some(
+    (subjectLibrary) => Boolean(subjectLibrary?.春季),
+  );
+  const coverageQuarters = sortCourseQuarters(
+    grade === "高三" &&
+      requestedQuarters.includes("秋季") &&
+      !requestedQuarters.includes("春季") &&
+      hasSecondRound
+      ? [...requestedQuarters, "春季"]
+      : requestedQuarters,
+  );
   return {
     id: String(input?.id || `product-${Date.now()}`),
     name: String(input?.name || "未命名产品"),
-    grade: String(input?.grade || "未设置年级"),
+    grade,
     stage: String(input?.stage || "未设置卡型"),
     status: String(input?.status || "配置中"),
     uploadNames: { ...(input?.uploadNames || {}) },
