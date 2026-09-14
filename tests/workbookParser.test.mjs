@@ -184,6 +184,27 @@ test("知识视频将寒假和冬季保留为独立课程阶段", async () => {
   );
 });
 
+test("知识视频仅通用和否不标课程分层，其它分层值均保留标记", async () => {
+  const workbook = XLSX.utils.book_new();
+  const sheet = XLSX.utils.aoa_to_sheet([
+    ["模块", "视频大纲", "是否分层", "（夏/秋/冬/春）"],
+    ["函数", "通用课程", "通用", "秋季"],
+    ["函数", "否课程", "否", "秋季"],
+    ["函数", "目标课程", "目标", "秋季"],
+    ["函数", "自定义分层课程", "拔高专项", "秋季"],
+  ]);
+  XLSX.utils.book_append_sheet(workbook, sheet, "高三数学");
+  const buffer = XLSX.write(workbook, { type: "array", bookType: "xlsx" });
+  const parsed = await parseCourseWorkbook(
+    { name: "分层测试.xlsx", async arrayBuffer() { return buffer; } },
+    "video",
+  );
+  assert.deepEqual(
+    parsed.library.高三.数学.秋季.ordered.map((row) => [row.title, row.isLayered]),
+    [["通用课程", false], ["否课程", false], ["目标课程", true], ["自定义分层课程", true]],
+  );
+});
+
 test("知识视频向下继承合并模块的分值且不跨模块串值", async () => {
   const workbook = XLSX.utils.book_new();
   const sheet = XLSX.utils.aoa_to_sheet([

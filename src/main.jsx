@@ -2359,6 +2359,7 @@ function groupVideoOutlineRows(rows) {
   return groups;
 }
 function isCourseLayered(row) {
+  if (typeof row?.isLayered === "boolean") return row.isLayered;
   const layer = String(row?.layer || "").trim();
   return Boolean(layer) && layer !== "通用" && layer !== "否";
 }

@@ -342,6 +342,7 @@ function parseVideo(rows) {
         title,
         sheetName,
       );
+      const isLayered = isLayeredVideoCourse(currentLayerValue);
       const item = {
         sourceOrder: sourceIndex,
         no:
@@ -351,6 +352,9 @@ function parseVideo(rows) {
         subject,
         quarter,
         bucket,
+        // 保留“是否分层”本身的判断结果。目标、菁英及其它自定义分层值
+        // 都需要在课程大纲后标注“课程分层”，不能只依赖班型归类结果。
+        isLayered,
         title: title.replace(/【(?:目标|菁英|精英|英才)班?】/g, "").trim(),
         difficulty:
           pickExact(row, "（1星/2星/3星/4星）") ||
@@ -460,6 +464,11 @@ function resolveVideoBucket(value, title, sheetName = "") {
   if (hasTarget) return "target";
   if (/^\s*是\s*/.test(String(value || ""))) return "layered";
   return "common";
+}
+
+function isLayeredVideoCourse(value) {
+  const label = String(value || "").trim();
+  return Boolean(label) && label !== "通用" && label !== "否";
 }
 
 function matchesVideoSheetTrack(sheetName, track) {

@@ -578,8 +578,17 @@ function normalizeVideoRows(rows, context = {}) {
       title: row.title || "未命名知识视频",
       module: module || currentModule || "其他模块",
       scoreShare: scoreShare || currentScoreShare,
+      isLayered:
+        typeof row?.isLayered === "boolean"
+          ? row.isLayered
+          : isLayeredVideoCourse(row?.layer),
     };
   });
+}
+
+function isLayeredVideoCourse(value) {
+  const label = String(value || "").trim();
+  return Boolean(label) && label !== "通用" && label !== "否";
 }
 
 function normalizeGifts(data) {
