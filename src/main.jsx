@@ -44,6 +44,12 @@ import {
   expectedVideoLessonCount,
   VIDEO_QUARTERS,
 } from "./courseRules";
+import {
+  COURSE_QUARTERS,
+  formatCourseStage,
+  formatCourseStages,
+  sortCourseQuarters,
+} from "./courseStages";
 import { getTaskFilename, sanitizeFilenamePart } from "./exportNaming";
 import { toChineseNumeral } from "./chineseNumerals";
 import { getPriceTierCounts } from "./priceModes";
@@ -707,7 +713,7 @@ function TaskWorkspace({
           </div>
           <div>
             <small>覆盖阶段</small>
-            <strong>{product.coverageQuarters.join(" + ")}</strong>
+            <strong>{formatCourseStages(product.grade, product.coverageQuarters)}</strong>
           </div>
         </div>
         <div className="production-type-summary">
@@ -724,7 +730,7 @@ function TaskWorkspace({
             <strong>{typeStats[taskTypeFilter].materials}张</strong>
           </div>
           <p>
-            已按 {product.coverageQuarters.join(" + ") || "未选择阶段"}
+            已按 {formatCourseStages(product.grade, product.coverageQuarters) || "未选择阶段"}
             自动映射；课时合计来自下方全部素材任务。
           </p>
         </div>
@@ -1199,7 +1205,7 @@ function PriceConfigPage({
       <div className="price-admin-product">
         <span>当前产品</span>
         <strong>{draft.name}</strong>
-        <em>{draft.grade} · {draft.stage} · {draft.coverageQuarters.join(" + ")}</em>
+        <em>{draft.grade} · {draft.stage} · {formatCourseStages(draft.grade, draft.coverageQuarters)}</em>
       </div>
       <PriceConfigEditor draft={draft} setDraft={setDraft} />
       {message ? <div className="config-message">{message}</div> : null}
@@ -1257,7 +1263,7 @@ function PriceConfigEditor({ draft, setDraft }) {
 }
 
 function StageMapping({ draft, setDraft }) {
-  const quarters = ["秋季", "寒假", "春季", "暑期"];
+  const quarters = COURSE_QUARTERS;
   return (
     <div className="config-card stage-mapping-card">
       <div className="config-heading">
@@ -1283,7 +1289,7 @@ function StageMapping({ draft, setDraft }) {
               })
             }
           >
-            {quarter}
+            {formatCourseStage(draft.grade, quarter)}
           </button>
         ))}
       </div>
@@ -1292,7 +1298,7 @@ function StageMapping({ draft, setDraft }) {
 }
 
 function LiveAssociationEditor({ draft, setDraft }) {
-  const quarters = ["秋季", "寒假", "春季", "暑期"];
+  const quarters = COURSE_QUARTERS;
   const mappedQuarters = quarters.filter((quarter) =>
     draft.coverageQuarters.includes(quarter),
   );
@@ -1390,7 +1396,7 @@ function LiveAssociationEditor({ draft, setDraft }) {
                 key={quarter}
                 onClick={() => setEditingQuarter(quarter)}
               >
-                {quarter}
+                {formatCourseStage(draft.grade, quarter)}
                 <small>{count} 节</small>
               </button>
             );
@@ -1543,7 +1549,7 @@ function VideoAssociationSummary({ draft }) {
         </div>
         <em>
           {activeQuarters.length
-            ? activeQuarters.join(" + ")
+            ? formatCourseStages(draft.grade, activeQuarters)
             : "当前产品不含知识视频阶段"}
         </em>
       </div>
@@ -1585,7 +1591,7 @@ function VideoAssociationSummary({ draft }) {
                       key={quarter}
                       onClick={() => setOutlineQuarter(quarter)}
                     >
-                      {quarter}
+                      {formatCourseStage(draft.grade, quarter)}
                     </button>
                   ))}
                 </div>
@@ -1946,7 +1952,7 @@ const LivePoster = React.forwardRef(function LivePoster(
     field(as, label, page[key] ?? fallback, (value) =>
       onChange?.({ scope: "page", patch: { [key]: value } }), className,
     );
-  const groups = groupLiveRows(rows, product.coverageQuarters);
+  const groups = groupLiveRows(rows, product.coverageQuarters, product.grade);
   const multi = groups.length > 1;
   const gradeTheme = gradeThemeKey(product.grade);
   const posterHeight = 661 + groups.length * 159 + rows.length * 78;
@@ -1997,7 +2003,7 @@ const LivePoster = React.forwardRef(function LivePoster(
             return (
             <section className="figma-live-stage" key={group.quarter}>
               <div className="figma-live-period">
-                {stageField("strong", "label", group.quarter, `${group.quarter}阶段名称`)}
+                {stageField("strong", "label", group.label, `${group.label}阶段名称`)}
                 {templateField("span", "timeLabel", `${group.quarter}上课时间表头`)}
                 {stageField("b", "time", formatStageTimes(group.rows), `${group.quarter}上课时间`)}
               </div>
@@ -2034,21 +2040,18 @@ const LivePoster = React.forwardRef(function LivePoster(
     </article>
   );
 });
-function groupLiveRows(rows, quarterOrder = []) {
-  const displayOrder = ["秋季", "寒假", "春季", "暑期"];
+function groupLiveRows(rows, quarterOrder = [], grade = "") {
   const map = new Map();
   rows.forEach((row) => {
     const quarter = row.quarter || quarterOrder[0] || "课程阶段";
     if (!map.has(quarter)) map.set(quarter, []);
     map.get(quarter).push(row);
   });
-  return [...map.entries()]
-    .sort(([a], [b]) => {
-      const aIndex = displayOrder.indexOf(a);
-      const bIndex = displayOrder.indexOf(b);
-      return (aIndex < 0 ? 99 : aIndex) - (bIndex < 0 ? 99 : bIndex);
-    })
-    .map(([quarter, items]) => ({ quarter, rows: items }));
+  return sortCourseQuarters([...map.keys()]).map((quarter) => ({
+    quarter,
+    label: formatCourseStage(grade, quarter),
+    rows: map.get(quarter),
+  }));
 }
 function formatStageTimes(rows) {
   const times = [...new Set(rows.map((row) => row.time).filter(Boolean))];

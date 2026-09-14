@@ -1,4 +1,6 @@
-export const VIDEO_QUARTERS = ["秋季", "寒假", "春季", "暑期"];
+import { COURSE_QUARTERS } from "./courseStages.js";
+
+export const VIDEO_QUARTERS = COURSE_QUARTERS;
 
 export function expectedVideoLessonCount(subject, quarter, grade = "") {
   if (quarter === "寒假") return 20;

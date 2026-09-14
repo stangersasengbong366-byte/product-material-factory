@@ -1,6 +1,7 @@
 import { demoProduct } from "./data/demoProduct.js";
 import { COURSE_SUBJECTS } from "./courseSubjects.js";
 import { normalizeLiveTemplateOverride } from "./liveTemplate.js";
+import { sortCourseQuarters } from "./courseStages.js";
 
 const STORAGE_KEY = "youdao-course-material-studio-product-v1";
 
@@ -18,10 +19,11 @@ export function saveProduct(product) {
 }
 
 export function normalizeProduct(input) {
-  const coverageQuarters =
+  const coverageQuarters = sortCourseQuarters(
     Array.isArray(input?.coverageQuarters) && input.coverageQuarters.length
       ? input.coverageQuarters
-      : inferCoverageQuarters(input?.stage);
+      : inferCoverageQuarters(input?.stage),
+  );
   return {
     id: String(input?.id || `product-${Date.now()}`),
     name: String(input?.name || "未命名产品"),
