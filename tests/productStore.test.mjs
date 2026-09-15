@@ -96,7 +96,7 @@ test("高三存在二轮底表时自动纳入春季，目标与菁英班均为�
   assert.equal(getVideoRows(product, "数学", "菁英班").length, 4);
 });
 
-test("三类产品分别使用正确的直播与知识视频阶段", () => {
+test("课程映射严格使用后台勾选的阶段，不由卡型覆盖", () => {
   const liveStage = (prefix, count, startOrder = 0) => ({
     一期: Array.from({ length: count }, (_, index) => ({
       no: index + 1,
@@ -145,10 +145,12 @@ test("三类产品分别使用正确的直播与知识视频阶段", () => {
     ...libraries,
   });
 
-  assert.equal(getLiveRows(product, "数学").length, 30);
-  assert.deepEqual(
-    getLiveRows(product, "数学").slice(0, 2).map((row) => row.title),
-    ["暑期补充1", "暑期补充2"],
+  product.coverageQuarters = ["秋季", "寒假", "春季"];
+  assert.equal(getLiveRows(product, "数学").length, 34);
+  assert.equal(getLiveRows(product, "数学")[0].title, "秋1");
+  assert.equal(
+    getLiveRows(product, "数学").some((row) => row.title.startsWith("暑")),
+    false,
   );
   assert.equal(getVideoRows(product, "数学", "目标班").length, 120);
 });

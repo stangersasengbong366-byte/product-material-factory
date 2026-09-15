@@ -1,5 +1,5 @@
 const CLOUD_API_URL =
-  import.meta.env.VITE_CLOUD_API_URL ||
+  import.meta.env?.VITE_CLOUD_API_URL ||
   "https://youdao-course-material-storage.stangersasengbong366.workers.dev/api/studio-config";
 
 export const cloudEnabled = true;
@@ -27,20 +27,39 @@ export async function loadCloudStudio({ signal } = {}) {
 }
 
 export async function saveCloudStudio(payload, { signal, revision } = {}) {
-  const response = await fetch(CLOUD_API_URL, {
+  const requestSignal = signal || AbortSignal.timeout(30000);
+  const body = JSON.stringify({ ...payload, version: Date.now() });
+  try {
+    let response = await putCloudStudio(body, revision, requestSignal);
+    if (response.status === 409 && Number.isInteger(revision)) {
+      const latest = await loadCloudStudio({ signal: requestSignal });
+      response = await putCloudStudio(body, latest?.revision, requestSignal);
+    }
+    if (!response.ok) {
+      throw new Error(await errorMessage(response, "Cloudflare 云端配置保存失败"));
+    }
+    return response.json();
+  } catch (error) {
+    if (error?.name === "TimeoutError" || error?.name === "AbortError") {
+      throw new Error("云端保存超时，请检查网络后重试");
+    }
+    throw error;
+  }
+}
+
+function putCloudStudio(body, revision, signal) {
+  return fetch(CLOUD_API_URL, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
-      ...(Number.isInteger(revision) ? { "X-Cloud-Revision": String(revision) } : {}),
+      ...(Number.isInteger(revision)
+        ? { "X-Cloud-Revision": String(revision) }
+        : {}),
     },
-    body: JSON.stringify({ ...payload, version: Date.now() }),
+    body,
     signal,
   });
-  if (!response.ok) {
-    throw new Error(await errorMessage(response, "Cloudflare 云端配置保存失败"));
-  }
-  return response.json();
 }
 
 async function errorMessage(response, fallback) {

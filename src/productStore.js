@@ -2,10 +2,6 @@ import { demoProduct } from "./data/demoProduct.js";
 import { COURSE_SUBJECTS } from "./courseSubjects.js";
 import { normalizeLiveTemplateOverride } from "./liveTemplate.js";
 import { sortCourseQuarters } from "./courseStages.js";
-import {
-  getCourseCoverageQuarters,
-  getExpectedLiveLessons,
-} from "./courseEntitlements.js";
 
 const STORAGE_KEY = "youdao-course-material-studio-product-v1";
 
@@ -389,28 +385,10 @@ function normalizePriceConfig(value = {}, product = {}) {
 export function getLiveRows(product, subject) {
   const gradeLibrary = product?.liveLibrary?.[product.grade]?.[subject];
   if (!gradeLibrary) return product?.live?.[subject] || [];
-  return getCourseCoverageQuarters(product, "live").flatMap((quarter) => {
+  return (product.coverageQuarters || []).flatMap((quarter) => {
     const stage = gradeLibrary?.[quarter] || {};
-    const primaryRows =
+    const rows =
       stage["一期"] || Object.values(stage).find((item) => item?.length) || [];
-    const expected = getExpectedLiveLessons(product, quarter);
-    const rows = [...primaryRows];
-    if (expected && rows.length < expected) {
-      const seen = new Set(rows.map(liveRowSignature));
-      Object.values(stage).forEach((batchRows) => {
-        (batchRows || []).forEach((row) => {
-          const signature = liveRowSignature(row);
-          if (rows.length >= expected || seen.has(signature)) return;
-          seen.add(signature);
-          rows.push(row);
-        });
-      });
-    }
-    rows.sort(
-      (left, right) =>
-        Number(left.sourceOrder ?? Number.MAX_SAFE_INTEGER) -
-        Number(right.sourceOrder ?? Number.MAX_SAFE_INTEGER),
-    );
     return rows.map((row, index) => ({
       ...row,
       sourceNo: row.no,
@@ -419,12 +397,6 @@ export function getLiveRows(product, subject) {
       batch: "自动关联",
     }));
   });
-}
-
-function liveRowSignature(row) {
-  return [row?.title, row?.module]
-    .map((value) => String(value || "").trim())
-    .join("|");
 }
 
 export function getVideoRows(
@@ -437,7 +409,7 @@ export function getVideoRows(
   const resolvedTrack = normalizedTrack === "通用版" ? "目标班" : normalizedTrack;
   if (!subjectLibrary) return product?.video?.[subject]?.[resolvedTrack] || [];
   const bucket = resolvedTrack === "菁英班" ? "elite" : "target";
-  const rows = getCourseCoverageQuarters(product, "video").flatMap((quarter, quarterIndex) => {
+  const rows = (product.coverageQuarters || []).flatMap((quarter, quarterIndex) => {
     const stage = subjectLibrary[quarter];
     if (!stage) return [];
     const allowedBuckets = new Set(["common", "layered", bucket]);
