@@ -169,6 +169,52 @@
 .figma-video .outline-rows p {
   grid-template-columns: 105px minmax(0, 1fr) 155px;
 }
+.figma-video .outline-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+.figma-video .outline-columns.is-two-column {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.figma-video .outline-column {
+  min-width: 0;
+}
+.figma-video .outline-columns.is-two-column .outline-head,
+.figma-video .outline-columns.is-two-column .outline-rows p {
+  grid-template-columns: 58px minmax(0, 1fr) 92px;
+}
+.figma-video .outline-columns.is-two-column .outline-head {
+  font-size: 16px;
+}
+.figma-video .outline-columns.is-two-column .outline-module-title {
+  min-height: 46px;
+  padding: 7px 12px;
+  gap: 10px;
+}
+.figma-video .outline-columns.is-two-column .outline-module-title strong,
+.figma-video .outline-columns.is-two-column .outline-module-title b {
+  font-size: 18px;
+}
+.figma-video .outline-columns.is-two-column .outline-rows p > * {
+  padding: 5px 8px;
+}
+.figma-video .outline-columns.is-two-column .outline-rows p strong {
+  gap: 6px;
+  font-size: 15px;
+}
+.figma-video .outline-columns.is-two-column .outline-rows p > span:first-child {
+  font-size: 15px;
+}
+.figma-video .outline-columns.is-two-column .outline-rows p > span:last-child {
+  font-size: 16px;
+  letter-spacing: 1px;
+}
+.figma-video .outline-columns.is-two-column .course-layer-badge {
+  padding: 2px 5px;
+  font-size: 10px;
+}
 .figma-video .outline-head {
   font-size: 19px;
 }
