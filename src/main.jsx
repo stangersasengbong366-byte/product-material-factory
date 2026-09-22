@@ -53,6 +53,7 @@ import {
 import { getTaskFilename, sanitizeFilenamePart } from "./exportNaming";
 import { toChineseNumeral } from "./chineseNumerals";
 import { getPriceTierCounts } from "./priceModes";
+import { splitVideoOutlineGroups } from "./videoOutlineColumns";
 import "./styles.css";
 import "./config.css";
 import "./figma-templates.css";
@@ -2080,6 +2081,10 @@ const VideoPoster = React.forwardRef(function VideoPoster(
     ...(pageOverride.rows?.[index] || {}),
   }));
   const outlineGroups = groupVideoOutlineRows(displayRows);
+  const outlineLayout = splitVideoOutlineGroups(
+    outlineGroups,
+    displayRows.length,
+  );
   const defaultBenefits = [
     {
       icon: "书",
@@ -2248,20 +2253,23 @@ const VideoPoster = React.forwardRef(function VideoPoster(
             </p>
           </div>
         </div>
-        <div className="outline-head">
-          <PosterEditable editable={editable} value={copy.headerNo} onCommit={(value) => updateTemplate({ headerNo: value })} />
-          <PosterEditable editable={editable} value={copy.headerTitle} onCommit={(value) => updateTemplate({ headerTitle: value })} />
-          <PosterEditable editable={editable} value={copy.headerDifficulty} onCommit={(value) => updateTemplate({ headerDifficulty: value })} />
-        </div>
-        <div className="outline-rows">
-          {outlineGroups.map((group, groupIndex) => (
+        <div className={`outline-columns ${outlineLayout.isSplit ? "is-two-column" : "is-one-column"}`}>
+          {outlineLayout.columns.map((columnGroups, columnIndex) => (
+            <div className="outline-column" key={columnIndex}>
+              <div className="outline-head">
+                <PosterEditable editable={editable} value={copy.headerNo} onCommit={(value) => updateTemplate({ headerNo: value })} />
+                <PosterEditable editable={editable} value={copy.headerTitle} onCommit={(value) => updateTemplate({ headerTitle: value })} />
+                <PosterEditable editable={editable} value={copy.headerDifficulty} onCommit={(value) => updateTemplate({ headerDifficulty: value })} />
+              </div>
+              <div className="outline-rows">
+          {columnGroups.map((group) => (
             <section
               className="outline-module"
-              key={`${group.module}-${groupIndex}`}
+              key={`${group.module}-${group.groupNumber}`}
             >
               <div className="outline-module-title">
                 <strong>
-                  {toChineseNumeral(groupIndex + 1)}、
+                  {toChineseNumeral(group.groupNumber)}、
                   <PosterEditable
                     editable={editable}
                     value={group.module}
@@ -2307,6 +2315,9 @@ const VideoPoster = React.forwardRef(function VideoPoster(
                 </p>
               ))}
             </section>
+          ))}
+              </div>
+            </div>
           ))}
         </div>
         <div className="learning-advice">
