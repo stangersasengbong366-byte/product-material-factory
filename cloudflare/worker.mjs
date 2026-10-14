@@ -6,7 +6,7 @@ function corsHeaders() {
     // 素材工厂可从 Netlify、GitHub Pages 或本地打开；接口不使用 Cookie，
     // 因此允许跨域访问，让所有使用该工具的同事连接同一份云端配置。
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, PUT, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, PUT, PATCH, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Accept, X-Cloud-Revision",
     "Cache-Control": "no-store",
   };
@@ -100,6 +100,89 @@ export default {
         .run();
       if (result.meta.changes !== 1) {
         return json({ message: "云端配置更新失败，请重试" }, 500);
+      }
+      return json({
+        saved: true,
+        updatedAt,
+        revision: current.revision + 1,
+      });
+    }
+
+    if (request.method === "PATCH") {
+      let change;
+      try {
+        change = await request.json();
+      } catch {
+        return json({ message: "配置数据格式无效" }, 400);
+      }
+      if (
+        change?.operation !== "upsert-product" ||
+        !change.product?.id
+      ) {
+        return json({ message: "产品配置缺少有效 ID" }, 400);
+      }
+
+      const current = await env.STUDIO_DB
+        .prepare("SELECT payload, revision FROM studio_config WHERE id = ?")
+        .bind(CONFIG_ID)
+        .first();
+      if (!current) return json({ message: "云端暂无基础配置" }, 404);
+
+      const expectedRevision = Number(request.headers.get("X-Cloud-Revision"));
+      if (
+        Number.isInteger(expectedRevision) &&
+        expectedRevision !== current.revision
+      ) {
+        return json(
+          {
+            message: "云端配置已更新，正在合并最新版本",
+            revision: current.revision,
+          },
+          409,
+        );
+      }
+
+      let payload;
+      try {
+        payload = JSON.parse(current.payload);
+      } catch {
+        return json({ message: "云端配置数据损坏，请重新保存" }, 500);
+      }
+      const products = Array.isArray(payload.products) ? payload.products : [];
+      const productIndex = products.findIndex(
+        (item) => String(item?.id) === String(change.product.id),
+      );
+      if (productIndex >= 0) products[productIndex] = change.product;
+      else products.push(change.product);
+
+      const nextPayload = {
+        ...payload,
+        products,
+        ...(change.annualLibrary
+          ? { annualLibrary: change.annualLibrary }
+          : {}),
+        cardTypes: [...new Set(products.map((item) => item.stage).filter(Boolean))],
+        version: Date.now(),
+      };
+      const updatedAt = new Date().toISOString();
+      const result = await env.STUDIO_DB
+        .prepare(
+          `UPDATE studio_config
+           SET payload = ?, updated_at = ?, revision = revision + 1
+           WHERE id = ? AND revision = ?`,
+        )
+        .bind(
+          JSON.stringify(nextPayload),
+          updatedAt,
+          CONFIG_ID,
+          current.revision,
+        )
+        .run();
+      if (result.meta.changes !== 1) {
+        return json(
+          { message: "云端配置同时发生更新，请重试" },
+          409,
+        );
       }
       return json({
         saved: true,

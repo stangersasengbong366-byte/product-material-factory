@@ -37,6 +37,7 @@ import {
   cloudEnabled,
   cloudProviderName,
   loadCloudStudio,
+  saveCloudProduct,
   saveCloudStudio,
 } from "./cloudRepository";
 import { parseCourseWorkbook } from "./workbookParser";
@@ -156,6 +157,8 @@ function App() {
   const [cloudLoaded, setCloudLoaded] = useState(false);
   const [cloudLoadSettled, setCloudLoadSettled] = useState(!cloudEnabled);
   const [cloudRevision, setCloudRevision] = useState(null);
+  const cloudRevisionRef = useRef(null);
+  const cloudSavingRef = useRef(false);
   const storedProduct =
     products.find((item) => item.id === selectedProductId) ?? products[0];
   const product = withAnnualLibrary(storedProduct, annualLibrary);
@@ -201,6 +204,27 @@ function App() {
         ? getVideoRows(product, activeTask.subject, activeTask.track)
         : (product.gifts?.[activeTask?.subject] ?? []);
 
+  const applyCloudConfig = (config, message = "云端已同步") => {
+    if (!config?.products?.length) return false;
+    const nextAnnualLibrary = normalizeAnnualLibrary(
+      config.annualLibrary || annualLibraryFromProduct(config.products[0]),
+    );
+    const nextProducts = config.products.map((item) =>
+      normalizeProduct(withAnnualLibrary(item, nextAnnualLibrary)),
+    );
+    setAnnualLibrary(nextAnnualLibrary);
+    setProducts(nextProducts);
+    setCloudRevision(config.revision);
+    cloudRevisionRef.current = config.revision;
+    setSelectedProductId((current) =>
+      nextProducts.some((item) => item.id === current)
+        ? current
+        : nextProducts[0].id,
+    );
+    setSyncState(`${message} · ${nextProducts.length} 个产品`);
+    return true;
+  };
+
   useEffect(() => {
     if (!cloudEnabled) return;
     loadCloudStudio({ signal: AbortSignal.timeout(15000) })
@@ -215,30 +239,52 @@ function App() {
               cardTypes: [...new Set(products.map((item) => item.stage))],
             }, { revision: config?.revision }).then((result) => {
               setCloudRevision(result.revision);
+              cloudRevisionRef.current = result.revision;
               setSyncState(`本地配置已迁移 · ${products.length} 个产品`);
             });
           }
           setSyncState("云端暂无素材配置");
           return;
         }
-        const nextAnnualLibrary = normalizeAnnualLibrary(
-          config.annualLibrary || annualLibraryFromProduct(config.products[0]),
-        );
-        const nextProducts = config.products.map((item) =>
-          normalizeProduct(withAnnualLibrary(item, nextAnnualLibrary)),
-        );
-        setAnnualLibrary(nextAnnualLibrary);
-        setProducts(nextProducts);
-        setCloudRevision(config.revision);
-        setSelectedProductId((current) =>
-          nextProducts.some((item) => item.id === current)
-            ? current
-            : nextProducts[0].id,
-        );
-        setSyncState(`云端已同步 · ${nextProducts.length} 个产品`);
+        applyCloudConfig(config);
       })
       .catch((error) => setSyncState(`云端读取失败：${error.name === "TimeoutError" ? "连接超时" : error.message}`))
       .finally(() => setCloudLoadSettled(true));
+  }, []);
+
+  useEffect(() => {
+    if (!cloudEnabled) return undefined;
+    let stopped = false;
+    const refreshCloud = async () => {
+      if (
+        stopped ||
+        cloudSavingRef.current ||
+        document.visibilityState === "hidden"
+      )
+        return;
+      try {
+        const config = await loadCloudStudio({
+          signal: AbortSignal.timeout(15000),
+        });
+        if (
+          Number.isInteger(config?.revision) &&
+          config.revision !== cloudRevisionRef.current
+        ) {
+          applyCloudConfig(config, "已自动同步云端更新");
+        }
+      } catch {
+        // 后台自动同步失败时保留当前页面，下一轮继续重试。
+      }
+    };
+    const timer = window.setInterval(refreshCloud, 5000);
+    window.addEventListener("focus", refreshCloud);
+    document.addEventListener("visibilitychange", refreshCloud);
+    return () => {
+      stopped = true;
+      window.clearInterval(timer);
+      window.removeEventListener("focus", refreshCloud);
+      document.removeEventListener("visibilitychange", refreshCloud);
+    };
   }, []);
 
   useEffect(() => {
@@ -280,20 +326,37 @@ function App() {
     options = {},
   ) => {
     setSyncState("正在保存云端");
+    cloudSavingRef.current = true;
     try {
-      const result = await saveCloudStudio({
-        products: nextProducts.map(stripAnnualLibrary),
-        annualLibrary: normalizeAnnualLibrary(nextAnnualLibrary),
-        cardTypes: [...new Set(nextProducts.map((item) => item.stage))],
-      }, {
-        ...options,
-        revision: options.revision ?? cloudRevision,
-      });
+      const productId = options.productId;
+      const changedProduct = productId
+        ? nextProducts.find((item) => item.id === productId)
+        : null;
+      const result = changedProduct
+        ? await saveCloudProduct(stripAnnualLibrary(changedProduct), {
+            signal: options.signal,
+            revision: options.revision ?? cloudRevisionRef.current,
+            ...(options.saveAnnualLibrary
+              ? { annualLibrary: normalizeAnnualLibrary(nextAnnualLibrary) }
+              : {}),
+          })
+        : await saveCloudStudio({
+            products: nextProducts.map(stripAnnualLibrary),
+            annualLibrary: normalizeAnnualLibrary(nextAnnualLibrary),
+            cardTypes: [...new Set(nextProducts.map((item) => item.stage))],
+          }, {
+            ...options,
+            revision: options.revision ?? cloudRevisionRef.current,
+          });
       setCloudRevision(result.revision);
-      setSyncState(`云端已保存 · ${nextProducts.length} 个产品`);
+      cloudRevisionRef.current = result.revision;
+      const latest = await loadCloudStudio({ signal: AbortSignal.timeout(15000) });
+      applyCloudConfig(latest, "云端已保存并同步");
     } catch (error) {
       setSyncState(`保存失败：${error.message}`);
       throw error;
+    } finally {
+      cloudSavingRef.current = false;
     }
   };
 
@@ -522,6 +585,7 @@ function App() {
             onAnnualLibraryChange={setAnnualLibrary}
             onAdd={addProduct}
             onDelete={deleteProduct}
+            cloudRevision={cloudRevision}
           />
         )}
         {activeNav === "price-config" && (
@@ -533,6 +597,7 @@ function App() {
             onSave={updateProduct}
             onSaveCloud={saveAllToCloud}
             onBack={() => setActiveNav("tasks")}
+            cloudRevision={cloudRevision}
           />
         )}
       </main>
@@ -609,8 +674,11 @@ function TaskWorkspace({
     setLiveSaving(true);
     setLiveMessage("正在保存云端…");
     try {
-      await onSaveCloud(undefined, undefined, { signal: AbortSignal.timeout(15000) });
-      setLiveMessage("母版已保存云端，同事刷新页面后可读取。");
+      await onSaveCloud(undefined, undefined, {
+        productId: product.id,
+        signal: AbortSignal.timeout(15000),
+      });
+      setLiveMessage("母版已保存云端，同事页面将自动同步。");
     } catch (error) {
       setLiveMessage(`云端保存失败${error.name === "TimeoutError" ? "：连接超时" : `：${error.message}`}。本机修改仍保留，可继续下载 PNG。`);
     } finally {
@@ -632,7 +700,7 @@ function TaskWorkspace({
   };
   const saveGiftCopy = async () => {
     setGiftSaving(true);
-    try { await onSaveCloud(); }
+    try { await onSaveCloud(undefined, undefined, { productId: product.id }); }
     finally { setGiftSaving(false); }
   };
   const updatePriceCopy = (patch) => {
@@ -652,7 +720,7 @@ function TaskWorkspace({
   };
   const savePriceCopy = async () => {
     setPriceSaving(true);
-    try { await onSaveCloud(); }
+    try { await onSaveCloud(undefined, undefined, { productId: product.id }); }
     finally { setPriceSaving(false); }
   };
   const updateVideoCopy = ({ scope, patch }) => {
@@ -679,7 +747,7 @@ function TaskWorkspace({
   };
   const saveVideoCopy = async () => {
     setVideoSaving(true);
-    try { await onSaveCloud(); }
+    try { await onSaveCloud(undefined, undefined, { productId: product.id }); }
     finally { setVideoSaving(false); }
   };
   return (
@@ -893,11 +961,13 @@ function CourseConfig({
   onAnnualLibraryChange,
   onAdd,
   onDelete,
+  cloudRevision,
 }) {
   const [draft, setDraft] = useState(product);
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
-  useEffect(() => setDraft(product), [product.id]);
+  const [annualLibraryDirty, setAnnualLibraryDirty] = useState(false);
+  useEffect(() => setDraft(product), [product.id, cloudRevision]);
   const cardTypes = [...new Set(products.map((item) => item.stage))];
   const selectedCard = product.stage;
   const cardProducts = products.filter((item) => item.stage === selectedCard);
@@ -935,6 +1005,7 @@ function CourseConfig({
               }
             : { ...draft, gifts: parsed, uploadNames: productNames };
       if (type === "live" || type === "video") {
+        setAnnualLibraryDirty(true);
         onAnnualLibraryChange(
           normalizeAnnualLibrary({
             ...annualLibrary,
@@ -984,7 +1055,11 @@ function CourseConfig({
         videoImportSummary: normalized.videoImportSummary,
         videoImportIgnoredRows: normalized.videoImportIgnoredRows,
       });
-      await onSaveCloud(nextProducts, nextAnnualLibrary);
+      await onSaveCloud(nextProducts, nextAnnualLibrary, {
+        productId: normalized.id,
+        saveAnnualLibrary: annualLibraryDirty,
+      });
+      setAnnualLibraryDirty(false);
       setMessage(`产品、全年课程库和赠课映射已保存到 ${cloudProviderName}`);
     } catch (error) {
       setMessage(error.message);
@@ -1163,11 +1238,12 @@ function PriceConfigPage({
   onSave,
   onSaveCloud,
   onBack,
+  cloudRevision,
 }) {
   const [draft, setDraft] = useState(product);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
-  useEffect(() => setDraft(product), [product.id]);
+  useEffect(() => setDraft(product), [product.id, cloudRevision]);
   const savePrice = async () => {
     setSaving(true);
     const normalized = normalizeProduct(draft);
@@ -1176,7 +1252,9 @@ function PriceConfigPage({
       item.id === normalized.id ? normalized : item,
     );
     try {
-      await onSaveCloud(nextProducts);
+      await onSaveCloud(nextProducts, undefined, {
+        productId: normalized.id,
+      });
       setMessage(`价格配置已保存到 ${cloudProviderName}`);
     } catch (error) {
       setMessage(error.message);

@@ -47,9 +47,52 @@ export async function saveCloudStudio(payload, { signal, revision } = {}) {
   }
 }
 
+export async function saveCloudProduct(
+  product,
+  { annualLibrary, signal, revision } = {},
+) {
+  const requestSignal = signal || AbortSignal.timeout(30000);
+  const body = JSON.stringify({
+    operation: "upsert-product",
+    product,
+    ...(annualLibrary ? { annualLibrary } : {}),
+  });
+  try {
+    let response = await patchCloudStudio(body, revision, requestSignal);
+    if (response.status === 409 && Number.isInteger(revision)) {
+      const latest = await loadCloudStudio({ signal: requestSignal });
+      response = await patchCloudStudio(body, latest?.revision, requestSignal);
+    }
+    if (!response.ok) {
+      throw new Error(await errorMessage(response, "Cloudflare 产品保存失败"));
+    }
+    return response.json();
+  } catch (error) {
+    if (error?.name === "TimeoutError" || error?.name === "AbortError") {
+      throw new Error("云端保存超时，请检查网络后重试");
+    }
+    throw error;
+  }
+}
+
 function putCloudStudio(body, revision, signal) {
   return fetch(CLOUD_API_URL, {
     method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...(Number.isInteger(revision)
+        ? { "X-Cloud-Revision": String(revision) }
+        : {}),
+    },
+    body,
+    signal,
+  });
+}
+
+function patchCloudStudio(body, revision, signal) {
+  return fetch(CLOUD_API_URL, {
+    method: "PATCH",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
