@@ -246,6 +246,38 @@ test("知识视频向下继承合并模块的分值且不跨模块串值", async
   );
 });
 
+test("知识视频表头与数据错位时仍可从整行识别季节和星级", async () => {
+  const workbook = XLSX.utils.book_new();
+  const sheet = XLSX.utils.aoa_to_sheet([
+    [
+      "模块",
+      "视频大纲",
+      "是否分层",
+      "（1星/2星/3星/4星）",
+      "（夏/秋/冬/春）",
+      "涉及知识所占高考分值及题型",
+    ],
+    ["遗传定律", "遗传基本概念", "", "试听课", "2星", "冬季"],
+    ["", "自由交配", "", "试听课", "4星", "冬季"],
+  ]);
+  XLSX.utils.book_append_sheet(workbook, sheet, "高一-生物");
+  const buffer = XLSX.write(workbook, { type: "array", bookType: "xlsx" });
+  const parsed = await parseCourseWorkbook(
+    {
+      name: "错位知识视频底表.xlsx",
+      async arrayBuffer() {
+        return buffer;
+      },
+    },
+    "video",
+  );
+
+  assert.deepEqual(
+    parsed.library.高一.生物.寒假.ordered.map((row) => [row.title, row.difficulty]),
+    [["遗传基本概念", "2星"], ["自由交配", "4星"]],
+  );
+});
+
 function makeTrackedVideoFile() {
   const workbook = XLSX.utils.book_new();
   const header = [

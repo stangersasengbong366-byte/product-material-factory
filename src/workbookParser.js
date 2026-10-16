@@ -326,7 +326,9 @@ function parseVideo(rows) {
       const title =
         pickExact(row, "视频大纲") ||
         pick(row, ["知识视频标题", "课程内容", "课程名称", "课题", "标题"]);
-      const rawStage = pick(row, ["夏/秋/冬/春", "季度", "阶段", "轮次"]);
+      const configuredStage = pick(row, ["夏/秋/冬/春", "季度", "阶段", "轮次"]);
+      const rawStage =
+        normalizeVideoQuarter(configuredStage) ? configuredStage : findVideoQuarterValue(row);
       const quarter = normalizeVideoQuarter(rawStage);
       if (!title || !quarter || /赠课/.test(rawStage)) {
         ignoredRows += 1;
@@ -357,10 +359,7 @@ function parseVideo(rows) {
         // 都需要在课程大纲后标注“课程分层”，不能只依赖班型归类结果。
         isLayered,
         title: title.replace(/【(?:目标|菁英|精英|英才)班?】/g, "").trim(),
-        difficulty:
-          pickExact(row, "（1星/2星/3星/4星）") ||
-          pick(row, ["星级难度", "难度", "难度星级"]) ||
-          "1星",
+        difficulty: resolveVideoDifficulty(row),
         module: currentModule || "其他模块",
         scoreShare: currentScoreShare,
         layer:
@@ -450,6 +449,29 @@ function normalizeVideoQuarter(value) {
   if (/一轮/.test(label)) return "秋季";
   if (/二轮/.test(label)) return "春季";
   return "";
+}
+
+function findVideoQuarterValue(row) {
+  return (
+    Object.entries(row)
+      .filter(([key]) => !key.startsWith("__"))
+      .map(([, value]) => String(value || "").trim())
+      .find((value) => normalizeVideoQuarter(value)) || ""
+  );
+}
+
+function resolveVideoDifficulty(row) {
+  const configured =
+    pickExact(row, "（1星/2星/3星/4星）") ||
+    pick(row, ["星级难度", "难度", "难度星级"]);
+  if (/^[1-4]\s*星$/.test(configured)) return configured.replace(/\s+/g, "");
+  return (
+    Object.entries(row)
+      .filter(([key]) => !key.startsWith("__"))
+      .map(([, value]) => String(value || "").trim())
+      .find((value) => /^[1-4]\s*星$/.test(value))
+      ?.replace(/\s+/g, "") || "1星"
+  );
 }
 
 function resolveVideoBucket(value, title, sheetName = "") {
