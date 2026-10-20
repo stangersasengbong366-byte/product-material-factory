@@ -2239,7 +2239,7 @@ const VideoPoster = React.forwardRef(function VideoPoster(
   return (
     <article
       ref={ref}
-      className={`figma-poster figma-video ${gradeTheme} video-layout-${outlineLayout.columnCount}-column`}
+      className={`figma-poster figma-video ${gradeTheme} video-columns-${outlineLayout.columnCount}`}
     >
       <img
         className="figma-video-logo"

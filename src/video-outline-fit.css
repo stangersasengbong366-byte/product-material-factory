@@ -14,6 +14,18 @@
   height: auto;
   min-height: 0;
 }
+.figma-video.video-columns-2 {
+  width: 1120px;
+}
+.figma-video.video-columns-3 {
+  width: 1320px;
+}
+.figma-video.video-columns-2 .figma-video-benefits,
+.figma-video.video-columns-3 .figma-video-benefits,
+.figma-video.grade-two.video-columns-2 .figma-video-benefits,
+.figma-video.grade-two.video-columns-3 .figma-video-benefits {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
 .figma-video.grade-two .figma-video-subject,
 .figma-video.grade-three .figma-video-subject {
   background: #ff2612;
@@ -180,10 +192,14 @@
 }
 .figma-video .outline-columns.is-3-column {
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  gap: 14px;
 }
 .figma-video .outline-column {
   min-width: 0;
+}
+.figma-video .outline-columns:is(.is-2-column, .is-3-column) .outline-column + .outline-column {
+  padding-left: 14px;
+  border-left: 1px solid #e2e5e9;
 }
 .figma-video .outline-columns.is-2-column .outline-head,
 .figma-video .outline-columns.is-2-column .outline-rows p {
@@ -221,33 +237,30 @@
 }
 .figma-video .outline-columns.is-3-column .outline-head,
 .figma-video .outline-columns.is-3-column .outline-rows p {
-  grid-template-columns: 43px minmax(0, 1fr) 72px;
+  grid-template-columns: 46px minmax(0, 1fr) 72px;
 }
 .figma-video .outline-columns.is-3-column .outline-head {
-  height: 46px;
-  padding: 0 4px;
-  font-size: 13px;
+  height: 44px;
+  padding: 0 6px;
+  font-size: 14px;
 }
 .figma-video .outline-columns.is-3-column .outline-module-title {
   min-height: 42px;
-  padding: 6px 8px;
-  gap: 6px;
+  padding: 6px 9px;
+  gap: 7px;
 }
 .figma-video .outline-columns.is-3-column .outline-module-title strong,
 .figma-video .outline-columns.is-3-column .outline-module-title b {
-  font-size: 14px;
-}
-.figma-video .outline-columns.is-3-column .outline-module-title strong {
-  min-width: 0;
+  font-size: 15px;
 }
 .figma-video .outline-columns.is-3-column .outline-rows p {
   min-height: 42px;
 }
 .figma-video .outline-columns.is-3-column .outline-rows p > * {
-  padding: 4px 5px;
+  padding: 5px 6px;
 }
 .figma-video .outline-columns.is-3-column .outline-rows p strong {
-  gap: 4px;
+  gap: 5px;
   font-size: 13px;
   line-height: 1.45;
 }

@@ -7,10 +7,7 @@ export function getVideoOutlineColumnCount(rowCount) {
   return 3;
 }
 
-export function splitVideoOutlineGroups(
-  groups,
-  rowCount,
-) {
+export function splitVideoOutlineGroups(groups, rowCount) {
   const numberedGroups = groups.map((group, index) => ({
     ...group,
     groupNumber: index + 1,
@@ -21,28 +18,35 @@ export function splitVideoOutlineGroups(
     return { isSplit: false, columnCount, columns: [numberedGroups] };
   }
 
-  const baseSize = Math.floor(rowCount / columnCount);
-  const remainder = rowCount % columnCount;
+  const actualRowCount = numberedGroups.reduce(
+    (sum, group) => sum + group.items.length,
+    0,
+  );
+  const baseSize = Math.floor(actualRowCount / columnCount);
+  const remainder = actualRowCount % columnCount;
   const columnCapacities = Array.from(
     { length: columnCount },
     (_, index) => baseSize + (index < remainder ? 1 : 0),
   );
   const columns = Array.from({ length: columnCount }, () => []);
+  const consumed = Array(columnCount).fill(0);
   let columnIndex = 0;
-  let usedInColumn = 0;
 
   numberedGroups.forEach((group) => {
-    let itemIndex = 0;
-    while (itemIndex < group.items.length && columnIndex < columnCount) {
-      const available = columnCapacities[columnIndex] - usedInColumn;
-      const items = group.items.slice(itemIndex, itemIndex + available);
-      if (items.length) columns[columnIndex].push({ ...group, items });
-      itemIndex += items.length;
-      usedInColumn += items.length;
-      if (usedInColumn === columnCapacities[columnIndex]) {
+    let itemOffset = 0;
+    while (itemOffset < group.items.length && columnIndex < columnCount) {
+      const capacity = columnCapacities[columnIndex] - consumed[columnIndex];
+      if (capacity <= 0) {
         columnIndex += 1;
-        usedInColumn = 0;
+        continue;
       }
+      const items = group.items.slice(itemOffset, itemOffset + capacity);
+      if (items.length) {
+        columns[columnIndex].push({ ...group, items });
+        consumed[columnIndex] += items.length;
+        itemOffset += items.length;
+      }
+      if (consumed[columnIndex] >= columnCapacities[columnIndex]) columnIndex += 1;
     }
   });
 
