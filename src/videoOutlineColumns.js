@@ -1,32 +1,50 @@
-export const VIDEO_OUTLINE_SINGLE_COLUMN_LIMIT = 60;
+export const VIDEO_OUTLINE_SINGLE_COLUMN_LIMIT = 39;
+export const VIDEO_OUTLINE_TWO_COLUMN_LIMIT = 60;
+
+export function getVideoOutlineColumnCount(rowCount) {
+  if (rowCount <= VIDEO_OUTLINE_SINGLE_COLUMN_LIMIT) return 1;
+  if (rowCount <= VIDEO_OUTLINE_TWO_COLUMN_LIMIT) return 2;
+  return 3;
+}
 
 export function splitVideoOutlineGroups(
   groups,
   rowCount,
-  singleColumnLimit = VIDEO_OUTLINE_SINGLE_COLUMN_LIMIT,
 ) {
   const numberedGroups = groups.map((group, index) => ({
     ...group,
     groupNumber: index + 1,
   }));
+  const columnCount = getVideoOutlineColumnCount(rowCount);
 
-  if (rowCount <= singleColumnLimit) {
-    return { isSplit: false, columns: [numberedGroups] };
+  if (columnCount === 1) {
+    return { isSplit: false, columnCount, columns: [numberedGroups] };
   }
 
-  const leftRowCount = Math.ceil(rowCount / 2);
-  const columns = [[], []];
-  let consumedRows = 0;
+  const baseSize = Math.floor(rowCount / columnCount);
+  const remainder = rowCount % columnCount;
+  const columnCapacities = Array.from(
+    { length: columnCount },
+    (_, index) => baseSize + (index < remainder ? 1 : 0),
+  );
+  const columns = Array.from({ length: columnCount }, () => []);
+  let columnIndex = 0;
+  let usedInColumn = 0;
 
   numberedGroups.forEach((group) => {
-    const leftCapacity = Math.max(0, leftRowCount - consumedRows);
-    const leftItems = group.items.slice(0, leftCapacity);
-    const rightItems = group.items.slice(leftItems.length);
-
-    if (leftItems.length) columns[0].push({ ...group, items: leftItems });
-    if (rightItems.length) columns[1].push({ ...group, items: rightItems });
-    consumedRows += leftItems.length;
+    let itemIndex = 0;
+    while (itemIndex < group.items.length && columnIndex < columnCount) {
+      const available = columnCapacities[columnIndex] - usedInColumn;
+      const items = group.items.slice(itemIndex, itemIndex + available);
+      if (items.length) columns[columnIndex].push({ ...group, items });
+      itemIndex += items.length;
+      usedInColumn += items.length;
+      if (usedInColumn === columnCapacities[columnIndex]) {
+        columnIndex += 1;
+        usedInColumn = 0;
+      }
+    }
   });
 
-  return { isSplit: true, columns };
+  return { isSplit: true, columnCount, columns };
 }

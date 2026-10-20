@@ -2237,7 +2237,10 @@ const VideoPoster = React.forwardRef(function VideoPoster(
     updatePage({ rows: nextRows });
   };
   return (
-    <article ref={ref} className={`figma-poster figma-video ${gradeTheme}`}>
+    <article
+      ref={ref}
+      className={`figma-poster figma-video ${gradeTheme} video-layout-${outlineLayout.columnCount}-column`}
+    >
       <img
         className="figma-video-logo"
         src={
@@ -2331,7 +2334,7 @@ const VideoPoster = React.forwardRef(function VideoPoster(
             </p>
           </div>
         </div>
-        <div className={`outline-columns ${outlineLayout.isSplit ? "is-two-column" : "is-one-column"}`}>
+        <div className={`outline-columns is-${outlineLayout.columnCount}-column`}>
           {outlineLayout.columns.map((columnGroups, columnIndex) => (
             <div className="outline-column" key={columnIndex}>
               <div className="outline-head">
