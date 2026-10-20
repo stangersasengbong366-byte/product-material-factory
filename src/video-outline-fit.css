@@ -79,13 +79,16 @@
   font-size: 24px;
 }
 .figma-video header > p {
-  width: 586px;
-  height: 50px;
+  width: fit-content;
+  max-width: calc(100% - 32px);
+  min-height: 50px;
   box-sizing: border-box;
   margin-top: 23px;
   padding: 11px 30px;
   font-size: 20px;
-  white-space: nowrap;
+  line-height: 1.4;
+  white-space: normal;
+  text-wrap: pretty;
 }
 .figma-video-benefits {
   height: 182px;
